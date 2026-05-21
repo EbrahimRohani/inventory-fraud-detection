@@ -16,9 +16,8 @@ No external dependencies are required; the app uses a tiny Node static server.
 ## Included Screens
 
 - Suspicious inventory alert queue
-- Alert evidence and score breakdown
-- Supplier risk board
-- Detection rule lab
+- Alert evidence and license rule breakdown
+- Supplier history board
 - Daily fraud digest
 
 The data is mocked in `app.js` so product, operations, and engineering teams can review the workflow before API integration.

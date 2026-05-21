@@ -28,13 +28,7 @@
             <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 5h16v4H4V5Zm0 6h7v8H4v-8Zm9 0h7v8h-7v-8Z" /></svg>
             </span>
-            Supplier risk
-          </button>
-          <button class="nav-item" type="button" data-view="rules">
-            <span class="nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M4 7h10v2H4V7Zm0 8h16v2H4v-2Zm13-10h3v6h-3V5ZM8 13h3v6H8v-6Z" /></svg>
-            </span>
-            Rule lab
+            Supplier history
           </button>
           <button class="nav-item" type="button" data-view="reports">
             <span class="nav-icon" aria-hidden="true">
@@ -60,7 +54,7 @@
             <h2 id="viewTitle">Suspicious Inventory Alerts</h2>
           </div>
           <div class="topbar-actions">
-            <button class="icon-button" id="refreshButton" type="button" aria-label="Refresh scores" title="Refresh scores">
+            <button class="icon-button" id="refreshButton" type="button" aria-label="Refresh license feed" title="Refresh license feed">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.7 6.3A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.2L13 11h8V3l-3.3 3.3Z" /></svg>
             </button>
             <button class="primary-button" id="exportButton" type="button">
@@ -71,70 +65,92 @@
         </header>
 
         <section class="view active" id="alertsView">
-          <section class="kpi-grid" aria-label="Risk summary">
-            <article class="metric-card critical">
-              <span>Critical alerts</span>
-              <strong id="criticalCount">0</strong>
+          <section class="kpi-grid" aria-label="Alert summary">
+            <article class="metric-card">
+              <span>Active alerts</span>
+              <strong id="alertCount">0</strong>
+              <small>License checks</small>
+            </article>
+            <article class="metric-card">
+              <span>Near departures</span>
+              <strong id="nearDepartureCount">0</strong>
               <small>Departure within 24h</small>
-            </article>
-            <article class="metric-card">
-              <span>High risk inventory</span>
-              <strong id="highCount">0</strong>
-              <small>Needs review</small>
-            </article>
-            <article class="metric-card">
-              <span>Affected bookings</span>
-              <strong id="bookingCount">0</strong>
-              <small>Across active alerts</small>
-            </article>
-            <article class="metric-card">
-              <span>Repeat suppliers</span>
-              <strong id="repeatSupplierCount">0</strong>
-              <small>Confirmed in 90 days</small>
             </article>
           </section>
 
           <section class="control-strip" aria-label="Queue filters">
-            <div class="search-field">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm5.7 8.3 4 4-1.4 1.4-4-4 1.4-1.4Z" /></svg>
-              <input id="searchInput" type="search" placeholder="Search route, airline, supplier" />
+            <div class="calendar-filter">
+              <button class="calendar-button" id="datePickerButton" type="button" aria-expanded="false" aria-controls="datePickerPanel">
+                <span>Alert date</span>
+                <strong id="datePickerLabel">All dates</strong>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 8H6v10h12V10ZM6 7v1h12V7H6Z" /></svg>
+              </button>
+              <div class="calendar-popover" id="datePickerPanel" hidden>
+                <div class="calendar-heading">
+                  <strong id="calendarMonthLabel">May 2026</strong>
+                  <button id="clearDateFilter" type="button">Clear</button>
+                </div>
+                <div class="calendar-weekdays" aria-hidden="true">
+                  <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                </div>
+                <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="Alert date calendar"></div>
+              </div>
             </div>
-            <div class="segmented" aria-label="Risk filter">
-              <button class="segment active" type="button" data-risk="all">All</button>
-              <button class="segment" type="button" data-risk="Critical">Critical</button>
-              <button class="segment" type="button" data-risk="High">High</button>
-              <button class="segment" type="button" data-risk="Medium">Medium</button>
-            </div>
-            <label class="toggle-line">
-              <input id="hideReviewedToggle" type="checkbox" checked />
-              Hide resolved
+            <label class="tolerance-filter">
+              <span>Exact license tolerance <strong id="exactToleranceValue">15 min</strong></span>
+              <input id="exactTolerance" type="range" min="5" max="120" value="15" step="5" data-filter="exactTolerance" />
             </label>
           </section>
 
-          <div class="content-grid">
+          <section class="filter-grid" aria-label="Column filters">
+            <label class="filter-field">
+              <span>Origin city</span>
+              <select id="originCityFilter" data-filter="originCity"></select>
+            </label>
+            <label class="filter-field">
+              <span>Origin airport</span>
+              <select id="originAirportFilter" data-filter="originAirport"></select>
+            </label>
+            <label class="filter-field">
+              <span>Destination city</span>
+              <select id="destinationCityFilter" data-filter="destinationCity"></select>
+            </label>
+            <label class="filter-field">
+              <span>Destination airport</span>
+              <select id="destinationAirportFilter" data-filter="destinationAirport"></select>
+            </label>
+            <label class="filter-field">
+              <span>Trip type</span>
+              <select id="tripTypeFilter" data-filter="tripType"></select>
+            </label>
+          </section>
+
+          <div class="content-grid table-only">
             <section class="queue-panel" aria-label="Suspicious inventory table">
               <div class="panel-heading">
                 <div>
-                  <h3>Review queue</h3>
+                  <h3>Alert queue</h3>
                   <p id="queueSummary">0 active alerts</p>
                 </div>
                 <select id="sortSelect" aria-label="Sort alerts">
-                  <option value="score">Highest risk</option>
-                  <option value="departure">Soonest departure</option>
-                  <option value="bookings">Most affected</option>
-                  <option value="created">Newest alert</option>
+                  <option value="inventory">Sort by inventory</option>
+                  <option value="advertised">Sort by advertised</option>
+                  <option value="license">Sort by license</option>
+                  <option value="tripType">Sort by trip type</option>
+                  <option value="supplier">Sort by supplier</option>
+                  <option value="error">Sort by error</option>
                 </select>
               </div>
               <div class="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>Risk</th>
                       <th>Inventory</th>
                       <th>Advertised</th>
-                      <th>Nearest license</th>
+                      <th>License</th>
+                      <th>Trip type</th>
                       <th>Supplier</th>
-                      <th>Status</th>
+                      <th>Error</th>
                     </tr>
                   </thead>
                   <tbody id="alertRows"></tbody>
@@ -142,70 +158,6 @@
               </div>
             </section>
 
-            <aside class="detail-panel" aria-label="Alert evidence">
-              <div class="detail-empty" id="detailEmpty">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 3 6v6c0 5 3.8 9.3 9 10 5.2-.7 9-5 9-10V6l-9-4Zm0 2.2 7 3.1V12c0 3.8-2.8 7.1-7 7.8-4.2-.7-7-4-7-7.8V7.3l7-3.1Z" /></svg>
-                <h3>Select an alert</h3>
-                <p>Evidence, score breakdown, and review actions appear here.</p>
-              </div>
-              <div class="detail-content hidden" id="detailContent">
-                <div class="detail-header">
-                  <div>
-                    <span class="risk-pill" id="detailRisk">High</span>
-                    <h3 id="detailTitle">IKA to MHD</h3>
-                    <p id="detailSubtitle">Iran Air, May 20</p>
-                  </div>
-                  <strong id="detailScore">82</strong>
-                </div>
-
-                <div class="evidence-grid">
-                  <div class="evidence-block">
-                    <span>Advertised time</span>
-                    <strong id="advertisedTime">08:00</strong>
-                  </div>
-                  <div class="evidence-block">
-                    <span>Licensed time</span>
-                    <strong id="licensedTime">10:00</strong>
-                  </div>
-                  <div class="evidence-block">
-                    <span>Affected bookings</span>
-                    <strong id="affectedBookings">12</strong>
-                  </div>
-                  <div class="evidence-block">
-                    <span>Supplier history</span>
-                    <strong id="supplierHistory">4 cases</strong>
-                  </div>
-                </div>
-
-                <section class="score-section">
-                  <div class="section-title">
-                    <h4>Score breakdown</h4>
-                    <span id="scoreVersion">v1.0</span>
-                  </div>
-                  <div id="scoreBreakdown" class="score-list"></div>
-                </section>
-
-                <section class="score-section">
-                  <div class="section-title">
-                    <h4>Evidence timeline</h4>
-                    <span id="alertAge">36m old</span>
-                  </div>
-                  <ol class="timeline" id="timelineList"></ol>
-                </section>
-
-                <section class="score-section">
-                  <div class="section-title">
-                    <h4>Review action</h4>
-                    <span id="decisionState">New</span>
-                  </div>
-                  <div class="action-row">
-                    <button class="secondary-button" type="button" data-action="In review">In review</button>
-                    <button class="danger-button" type="button" data-action="Confirmed fake">Confirm fake</button>
-                    <button class="secondary-button" type="button" data-action="False positive">False positive</button>
-                  </div>
-                </section>
-              </div>
-            </aside>
           </div>
         </section>
 
@@ -213,38 +165,11 @@
           <section class="supplier-layout">
             <div class="panel-heading">
               <div>
-                <h3>Supplier risk board</h3>
-                <p>Aggregated from confirmed cases, schedule shifts, and high-risk active inventory.</p>
+                <h3>Supplier history board</h3>
+                <p>Aggregated from confirmed cases, schedule shifts, and active inventory alerts.</p>
               </div>
             </div>
             <div class="supplier-grid" id="supplierGrid"></div>
-          </section>
-        </section>
-
-        <section class="view" id="rulesView">
-          <section class="rules-layout">
-            <div class="rule-card">
-              <h3>Rule thresholds</h3>
-              <label>
-                Exact license tolerance
-                <input id="exactTolerance" type="range" min="5" max="45" value="15" step="5" />
-                <span id="exactToleranceValue">15 min</span>
-              </label>
-              <label>
-                Shadow window
-                <input id="shadowWindow" type="range" min="1" max="8" value="4" step="1" />
-                <span id="shadowWindowValue">4 h</span>
-              </label>
-              <label>
-                Review threshold
-                <input id="reviewThreshold" type="range" min="40" max="90" value="60" step="5" />
-                <span id="reviewThresholdValue">60</span>
-              </label>
-            </div>
-            <div class="rule-card">
-              <h3>Rule impact preview</h3>
-              <canvas id="ruleChart" width="620" height="260" aria-label="Rule impact chart"></canvas>
-            </div>
           </section>
         </section>
 
@@ -266,8 +191,8 @@
                 <ul id="topReasons"></ul>
               </article>
               <article class="report-card wide">
-                <h4>Risk trend</h4>
-                <canvas id="trendChart" width="900" height="260" aria-label="Risk trend chart"></canvas>
+                <h4>Alert trend</h4>
+                <canvas id="trendChart" width="900" height="260" aria-label="Alert trend chart"></canvas>
               </article>
             </div>
           </section>

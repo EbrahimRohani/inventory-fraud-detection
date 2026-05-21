@@ -5,30 +5,32 @@ const alerts = [
     airline: "Iran Air",
     flightNo: "IR-431",
     route: "THR -> MHD",
+    originCity: "Tehran",
+    originAirport: "THR",
+    destinationCity: "Mashhad",
+    destinationAirport: "MHD",
     origin: "THR",
     destination: "MHD",
     date: "20 May",
+    dateIso: "2026-05-20",
     advertisedTime: "08:00",
     licensedTime: "10:00",
+    tripType: "Oneway",
     supplier: "Aseman Charter Co.",
     agency: "Agency 1187",
-    score: 91,
-    risk: "Critical",
-    bookings: 18,
-    status: "New",
     createdMinutesAgo: 34,
     departureHours: 7,
     reasons: [
-      ["NO_LICENSE_MATCH", 40, "No exact license exists for Iran Air at 08:00 on THR -> MHD."],
-      ["NEAR_REAL_FLIGHT_TIME", 25, "Advertised time is 120 minutes before a licensed Iran Air flight."],
-      ["MULTIPLE_SHADOW_TIMES", 16, "Same supplier also lists 12:00 around the 10:00 licensed flight."],
-      ["SUPPLIER_HISTORY_RISK", 10, "Four confirmed fake inventory cases in the last 90 days."]
+      ["NO_LICENSE_MATCH", "No exact license exists for Iran Air at 08:00 on THR -> MHD."],
+      ["NEAR_REAL_FLIGHT_TIME", "Advertised time is 120 minutes before a licensed Iran Air flight."],
+      ["MULTIPLE_SHADOW_TIMES", "Same supplier also lists 12:00 around the 10:00 licensed flight."],
+      ["SUPPLIER_HISTORY", "Four confirmed fake inventory cases in the last 90 days."]
     ],
     timeline: [
       ["09:08", "Inventory opened", "18 seats listed with fixed availability."],
       ["09:16", "License check failed", "No matching license for the advertised departure time."],
-      ["09:21", "Shadow pattern found", "Nearest licensed flight is Iran Air 10:00."],
-      ["09:42", "Bookings detected", "18 passengers currently exposed."]
+      ["09:21", "Shadow pattern found", "License record is Iran Air 10:00."],
+      ["09:42", "Supplier listing verified", "Inventory details still differ from the license feed."]
     ]
   },
   {
@@ -37,30 +39,32 @@ const alerts = [
     airline: "Iran Air",
     flightNo: "IR-431",
     route: "THR -> MHD",
+    originCity: "Tehran",
+    originAirport: "THR",
+    destinationCity: "Mashhad",
+    destinationAirport: "MHD",
     origin: "THR",
     destination: "MHD",
     date: "20 May",
+    dateIso: "2026-05-20",
     advertisedTime: "12:00",
     licensedTime: "10:00",
+    tripType: "Roundtrip",
     supplier: "Aseman Charter Co.",
     agency: "Agency 1187",
-    score: 86,
-    risk: "Critical",
-    bookings: 11,
-    status: "In review",
     createdMinutesAgo: 39,
     departureHours: 9,
     reasons: [
-      ["NO_LICENSE_MATCH", 40, "No license record supports a 12:00 departure."],
-      ["NEAR_REAL_FLIGHT_TIME", 25, "Time is 120 minutes after a valid Iran Air flight."],
-      ["MULTIPLE_SHADOW_TIMES", 16, "Two fake times surround one licensed operation."],
-      ["MISSING_OR_INVALID_FLIGHT_NUMBER", 5, "Flight number reused outside license time."]
+      ["NO_LICENSE_MATCH", "No license record supports a 12:00 departure."],
+      ["NEAR_REAL_FLIGHT_TIME", "Time is 120 minutes after a valid Iran Air flight."],
+      ["MULTIPLE_SHADOW_TIMES", "Two fake times surround one licensed operation."],
+      ["MISSING_OR_INVALID_FLIGHT_NUMBER", "Flight number reused outside license time."]
     ],
     timeline: [
       ["09:03", "Inventory opened", "Inventory copied price and baggage from licensed flight."],
       ["09:15", "Related alert linked", "Matched to AL-1024 by supplier, route, airline, and date."],
-      ["09:29", "Review started", "Supply team assigned case."],
-      ["09:44", "Passenger exposure updated", "11 bookings attached to inventory."]
+      ["09:29", "License feed compared", "No matching 12:00 operation was found."],
+      ["09:44", "Inventory still active", "Supplier listing remained visible after the license miss."]
     ]
   },
   {
@@ -69,30 +73,32 @@ const alerts = [
     airline: "Qeshm Air",
     flightNo: "QB-1206",
     route: "IFN -> THR",
+    originCity: "Isfahan",
+    originAirport: "IFN",
+    destinationCity: "Tehran",
+    destinationAirport: "THR",
     origin: "IFN",
     destination: "THR",
     date: "20 May",
+    dateIso: "2026-05-20",
     advertisedTime: "15:45",
     licensedTime: "17:05",
+    tripType: "Oneway",
     supplier: "Pars Sky Supply",
     agency: "Agency 2044",
-    score: 78,
-    risk: "High",
-    bookings: 6,
-    status: "New",
     createdMinutesAgo: 66,
     departureHours: 12,
     reasons: [
-      ["NO_LICENSE_MATCH", 35, "License feed has no 15:45 Qeshm Air operation."],
-      ["NEAR_REAL_FLIGHT_TIME", 24, "Advertised time is near a licensed 17:05 flight."],
-      ["SUSPICIOUS_SEAT_AVAILABILITY", 9, "Seat count has remained exactly 9 for six snapshots."],
-      ["SUPPLIER_HISTORY_RISK", 10, "Supplier has two confirmed route-time shifts."]
+      ["NO_LICENSE_MATCH", "License feed has no 15:45 Qeshm Air operation."],
+      ["NEAR_REAL_FLIGHT_TIME", "Advertised time is near a licensed 17:05 flight."],
+      ["SUSPICIOUS_SEAT_AVAILABILITY", "Seat count has remained exactly 9 for six snapshots."],
+      ["SUPPLIER_HISTORY", "Supplier has two confirmed route-time shifts."]
     ],
     timeline: [
       ["08:32", "Inventory opened", "Nine seats published on B2C and B2B channels."],
       ["08:46", "License miss", "No exact flight license found."],
       ["09:10", "Availability anomaly", "Fixed seat count across repeated checks."],
-      ["09:41", "Alert created", "Score crossed review threshold."]
+      ["09:41", "Alert created", "Rule evidence matched the license mismatch pattern."]
     ]
   },
   {
@@ -101,28 +107,30 @@ const alerts = [
     airline: "Zagros Airlines",
     flightNo: "ZV-4102",
     route: "SYZ -> MHD",
+    originCity: "Shiraz",
+    originAirport: "SYZ",
+    destinationCity: "Mashhad",
+    destinationAirport: "MHD",
     origin: "SYZ",
     destination: "MHD",
     date: "21 May",
+    dateIso: "2026-05-21",
     advertisedTime: "06:20",
     licensedTime: "08:00",
+    tripType: "Roundtrip",
     supplier: "Mehr Air Desk",
     agency: "Agency 3310",
-    score: 72,
-    risk: "High",
-    bookings: 3,
-    status: "New",
     createdMinutesAgo: 92,
     departureHours: 22,
     reasons: [
-      ["NO_LICENSE_MATCH", 40, "No licensed Zagros flight at 06:20."],
-      ["NEAR_REAL_FLIGHT_TIME", 22, "Advertised time is 100 minutes from a licensed flight."],
-      ["MISSING_OR_INVALID_FLIGHT_NUMBER", 10, "Flight number is not present in license source."]
+      ["NO_LICENSE_MATCH", "No licensed Zagros flight at 06:20."],
+      ["NEAR_REAL_FLIGHT_TIME", "Advertised time is 100 minutes from a licensed flight."],
+      ["MISSING_OR_INVALID_FLIGHT_NUMBER", "Flight number is not present in license source."]
     ],
     timeline: [
       ["08:03", "Inventory opened", "Published after licensed 08:00 flight appeared."],
       ["08:30", "Flight number check failed", "Flight number not found in route license list."],
-      ["09:31", "Alert created", "High-risk score generated."]
+      ["09:31", "Alert created", "License mismatch evidence was generated."]
     ]
   },
   {
@@ -131,29 +139,31 @@ const alerts = [
     airline: "Caspian Airlines",
     flightNo: "CPN-692",
     route: "AWZ -> THR",
+    originCity: "Ahvaz",
+    originAirport: "AWZ",
+    destinationCity: "Tehran",
+    destinationAirport: "THR",
     origin: "AWZ",
     destination: "THR",
     date: "21 May",
+    dateIso: "2026-05-21",
     advertisedTime: "19:10",
     licensedTime: "19:30",
+    tripType: "Oneway",
     supplier: "Shomal Ticket Hub",
     agency: "Agency 1710",
-    score: 54,
-    risk: "Medium",
-    bookings: 0,
-    status: "New",
     createdMinutesAgo: 18,
     departureHours: 31,
     reasons: [
-      ["NEAR_REAL_FLIGHT_TIME", 18, "Advertised time is close to a licensed operation."],
-      ["AMBIGUOUS_LICENSE_MATCH", 18, "Two similar license records need review."],
-      ["SUSPICIOUS_SEAT_AVAILABILITY", 8, "Availability is unchanged after five supplier polls."],
-      ["SUPPLIER_HISTORY_RISK", 10, "One prior confirmed case in the last 90 days."]
+      ["NEAR_REAL_FLIGHT_TIME", "Advertised time is close to a licensed operation."],
+      ["AMBIGUOUS_LICENSE_MATCH", "Two similar license records need validation."],
+      ["SUSPICIOUS_SEAT_AVAILABILITY", "Availability is unchanged after five supplier polls."],
+      ["SUPPLIER_HISTORY", "One prior confirmed case in the last 90 days."]
     ],
     timeline: [
-      ["09:24", "Inventory opened", "No bookings yet."],
+      ["09:24", "Inventory opened", "Supplier listing appeared with a shifted departure time."],
       ["09:31", "Ambiguous match", "License times 19:30 and 20:05 both nearby."],
-      ["09:42", "Medium alert created", "Monitoring until booking or supplier update."]
+      ["09:42", "Alert created", "Monitoring until supplier update."]
     ]
   },
   {
@@ -162,30 +172,96 @@ const alerts = [
     airline: "Aseman Airlines",
     flightNo: "EP-3845",
     route: "TBZ -> THR",
+    originCity: "Tabriz",
+    originAirport: "TBZ",
+    destinationCity: "Tehran",
+    destinationAirport: "THR",
     origin: "TBZ",
     destination: "THR",
     date: "21 May",
+    dateIso: "2026-05-21",
     advertisedTime: "11:30",
     licensedTime: "13:00",
+    tripType: "Roundtrip",
     supplier: "Kavir Charter",
     agency: "Agency 0920",
-    score: 81,
-    risk: "Critical",
-    bookings: 9,
-    status: "Needs supplier clarification",
     createdMinutesAgo: 128,
     departureHours: 26,
     reasons: [
-      ["NO_LICENSE_MATCH", 40, "No Aseman license for 11:30 on this route."],
-      ["LAST_MINUTE_TIME_CHANGE_PATTERN", 22, "Supplier moved 31 percent of prior bookings to licensed times."],
-      ["SUPPLIER_HISTORY_RISK", 14, "Three confirmed fake cases in the last 90 days."],
-      ["SUSPICIOUS_SEAT_AVAILABILITY", 5, "Constant seat count across snapshots."]
+      ["NO_LICENSE_MATCH", "No Aseman license for 11:30 on this route."],
+      ["LAST_MINUTE_TIME_CHANGE_PATTERN", "Supplier has a repeated pattern of moving listings to licensed times."],
+      ["SUPPLIER_HISTORY", "Three confirmed fake cases in the last 90 days."],
+      ["SUSPICIOUS_SEAT_AVAILABILITY", "Constant seat count across snapshots."]
     ],
     timeline: [
       ["07:34", "Inventory opened", "B2B and B2C inventory published together."],
       ["08:11", "Historical pattern matched", "Supplier has repeated time-shift behavior."],
       ["09:06", "Clarification requested", "Supply team asked supplier for license proof."],
-      ["09:42", "Bookings updated", "Nine active bookings attached."]
+      ["09:42", "Inventory still active", "Supplier listing remained visible after the license miss."]
+    ]
+  },
+  {
+    id: "AL-1030",
+    inventoryId: "INV-TK-90412",
+    airline: "Turkish Airlines",
+    flightNo: "TK-873",
+    route: "IKA -> IST",
+    originCity: "Tehran",
+    originAirport: "IKA",
+    destinationCity: "Istanbul",
+    destinationAirport: "IST",
+    origin: "IKA",
+    destination: "IST",
+    date: "21 May",
+    dateIso: "2026-05-21",
+    advertisedTime: "04:15",
+    licensedTime: "05:00",
+    tripType: "Roundtrip",
+    supplier: "Global Charter Desk",
+    agency: "Agency 4401",
+    createdMinutesAgo: 44,
+    departureHours: 16,
+    reasons: [
+      ["NO_LICENSE_MATCH", "No exact Turkish Airlines license exists for IKA -> IST at 04:15."],
+      ["NEAR_REAL_FLIGHT_TIME", "Advertised time is 45 minutes before the licensed Istanbul Airport operation."],
+      ["AIRPORT_SCOPE_MISMATCH", "The city is Istanbul, but the license must match Istanbul Airport specifically."]
+    ],
+    timeline: [
+      ["08:58", "Inventory opened", "International route published with Istanbul as destination city."],
+      ["09:06", "Airport check failed", "License source has TK-873 at IST for 05:00, not 04:15."],
+      ["09:38", "Alert created", "City matched but airport-time license did not match exactly."]
+    ]
+  },
+  {
+    id: "AL-1031",
+    inventoryId: "INV-PC-77104",
+    airline: "Pegasus Airlines",
+    flightNo: "PC-517",
+    route: "IKA -> SAW",
+    originCity: "Tehran",
+    originAirport: "IKA",
+    destinationCity: "Istanbul",
+    destinationAirport: "SAW",
+    origin: "IKA",
+    destination: "SAW",
+    date: "21 May",
+    dateIso: "2026-05-21",
+    advertisedTime: "13:40",
+    licensedTime: "15:10",
+    tripType: "Oneway",
+    supplier: "Anatolia Seat Hub",
+    agency: "Agency 4401",
+    createdMinutesAgo: 52,
+    departureHours: 25,
+    reasons: [
+      ["NO_LICENSE_MATCH", "No Pegasus license supports IKA -> SAW at 13:40."],
+      ["NEAR_REAL_FLIGHT_TIME", "Advertised time is near a licensed Sabiha Gokcen operation."],
+      ["AIRPORT_SCOPE_MISMATCH", "Istanbul city has multiple airports, so SAW must be validated separately from IST."]
+    ],
+    timeline: [
+      ["08:47", "Inventory opened", "Supplier listed Istanbul city with Sabiha Gokcen airport code."],
+      ["09:12", "License check failed", "No exact Pegasus operation at the advertised departure time."],
+      ["09:40", "Alert created", "Airport-specific license mismatch detected."]
     ]
   }
 ];
@@ -193,7 +269,6 @@ const alerts = [
 const suppliers = [
   {
     name: "Aseman Charter Co.",
-    score: 88,
     activeAlerts: 2,
     confirmedCases: 4,
     shiftRate: "34%",
@@ -202,7 +277,6 @@ const suppliers = [
   },
   {
     name: "Kavir Charter",
-    score: 81,
     activeAlerts: 1,
     confirmedCases: 3,
     shiftRate: "31%",
@@ -211,7 +285,6 @@ const suppliers = [
   },
   {
     name: "Pars Sky Supply",
-    score: 74,
     activeAlerts: 1,
     confirmedCases: 2,
     shiftRate: "22%",
@@ -220,7 +293,6 @@ const suppliers = [
   },
   {
     name: "Mehr Air Desk",
-    score: 69,
     activeAlerts: 1,
     confirmedCases: 1,
     shiftRate: "18%",
@@ -229,7 +301,6 @@ const suppliers = [
   },
   {
     name: "Shomal Ticket Hub",
-    score: 48,
     activeAlerts: 1,
     confirmedCases: 1,
     shiftRate: "9%",
@@ -240,158 +311,228 @@ const suppliers = [
 
 const state = {
   view: "alerts",
-  selectedRisk: "all",
-  selectedAlertId: alerts[0].id,
-  hideReviewed: true,
-  sortBy: "score",
-  search: ""
+  sortBy: "advertised",
+  calendarMonth: alerts[0].dateIso.slice(0, 7),
+  filters: {
+    date: "",
+    originCity: "",
+    originAirport: "",
+    destinationCity: "",
+    destinationAirport: "",
+    tripType: "",
+    exactTolerance: "15"
+  }
 };
 
 const dom = {
   viewTitle: document.querySelector("#viewTitle"),
   views: document.querySelectorAll(".view"),
   navItems: document.querySelectorAll(".nav-item"),
-  searchInput: document.querySelector("#searchInput"),
-  riskSegments: document.querySelectorAll(".segment"),
-  hideReviewedToggle: document.querySelector("#hideReviewedToggle"),
+  filterInputs: document.querySelectorAll("[data-filter]"),
   sortSelect: document.querySelector("#sortSelect"),
   alertRows: document.querySelector("#alertRows"),
   queueSummary: document.querySelector("#queueSummary"),
-  detailEmpty: document.querySelector("#detailEmpty"),
-  detailContent: document.querySelector("#detailContent"),
+  datePickerButton: document.querySelector("#datePickerButton"),
+  datePickerLabel: document.querySelector("#datePickerLabel"),
+  datePickerPanel: document.querySelector("#datePickerPanel"),
+  calendarMonthLabel: document.querySelector("#calendarMonthLabel"),
+  calendarGrid: document.querySelector("#calendarGrid"),
+  clearDateFilter: document.querySelector("#clearDateFilter"),
   toast: document.querySelector("#toast")
 };
 
+const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+const availableDates = new Set(alerts.map((alert) => alert.dateIso));
+
+function timeToMinutes(time) {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function licenseGapMinutes(alert) {
+  return Math.abs(timeToMinutes(alert.advertisedTime) - timeToMinutes(alert.licensedTime));
+}
+
+function formatLicenseGap(alert) {
+  const gap = licenseGapMinutes(alert);
+  return `${gap} min`;
+}
+
+function cityRoute(alert) {
+  return `${alert.originCity || alert.origin} -> ${alert.destinationCity || alert.destination}`;
+}
+
+function airportRoute(alert) {
+  return `${alert.originAirport || alert.origin} -> ${alert.destinationAirport || alert.destination}`;
+}
+
+function uniqueValues(key) {
+  return [...new Set(alerts.map((alert) => alert[key]))].sort((a, b) => collator.compare(a, b));
+}
+
+function fillSelect(selectId, label, values, selectedValue = "") {
+  const select = document.querySelector(`#${selectId}`);
+  select.innerHTML = [`<option value="">All ${label}</option>`, ...values.map((value) => `<option value="${value}">${value}</option>`)].join("");
+  select.value = values.includes(selectedValue) ? selectedValue : "";
+  return select.value;
+}
+
+function uniqueValuesWhere(key, predicate) {
+  return [...new Set(alerts.filter(predicate).map((alert) => alert[key]))].sort((a, b) => collator.compare(a, b));
+}
+
+function renderFilterOptions() {
+  state.filters.originCity = fillSelect("originCityFilter", "origin cities", uniqueValues("originCity"), state.filters.originCity);
+  state.filters.destinationCity = fillSelect("destinationCityFilter", "destination cities", uniqueValues("destinationCity"), state.filters.destinationCity);
+  state.filters.originAirport = fillSelect(
+    "originAirportFilter",
+    "origin airports",
+    uniqueValuesWhere("originAirport", (alert) => !state.filters.originCity || alert.originCity === state.filters.originCity),
+    state.filters.originAirport
+  );
+  state.filters.destinationAirport = fillSelect(
+    "destinationAirportFilter",
+    "destination airports",
+    uniqueValuesWhere("destinationAirport", (alert) => !state.filters.destinationCity || alert.destinationCity === state.filters.destinationCity),
+    state.filters.destinationAirport
+  );
+  state.filters.tripType = fillSelect("tripTypeFilter", "trip types", uniqueValues("tripType"), state.filters.tripType);
+}
+
+function formatDateLabel(dateIso) {
+  if (!dateIso) return "All dates";
+  const [year, month, day] = dateIso.split("-").map(Number);
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).format(new Date(year, month - 1, day));
+}
+
+function renderCalendar() {
+  const [year, month] = state.calendarMonth.split("-").map(Number);
+  const monthIndex = month - 1;
+  const firstDay = new Date(year, monthIndex, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  dom.calendarMonthLabel.textContent = new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric"
+  }).format(new Date(year, monthIndex, 1));
+  dom.datePickerLabel.textContent = formatDateLabel(state.filters.date);
+
+  const blanks = Array.from({ length: firstDay }, () => '<span class="calendar-empty"></span>');
+  const days = Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
+    const dateIso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const hasAlerts = availableDates.has(dateIso);
+    const active = state.filters.date === dateIso;
+    return `
+      <button class="${active ? "active" : ""}" type="button" data-date="${dateIso}" ${hasAlerts ? "" : "disabled"}>
+        ${day}
+      </button>
+    `;
+  });
+
+  dom.calendarGrid.innerHTML = [...blanks, ...days].join("");
+  dom.calendarGrid.querySelectorAll("[data-date]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.filters.date = button.dataset.date;
+      closeCalendar();
+      renderCalendar();
+      renderQueue();
+    });
+  });
+}
+
+function closeCalendar() {
+  dom.datePickerPanel.hidden = true;
+  dom.datePickerButton.setAttribute("aria-expanded", "false");
+}
+
+function primaryError(alert) {
+  const [code, note] = alert.reasons[0];
+  return { code, note };
+}
+
 function filteredAlerts() {
-  const term = state.search.trim().toLowerCase();
+  const tolerance = Number(state.filters.exactTolerance);
 
   return alerts
     .filter((alert) => {
-      const matchesRisk = state.selectedRisk === "all" || alert.risk === state.selectedRisk;
-      const searchable = `${alert.route} ${alert.airline} ${alert.supplier} ${alert.inventoryId} ${alert.flightNo}`.toLowerCase();
-      const matchesSearch = !term || searchable.includes(term);
-      const isResolved = alert.status === "False positive" || alert.status === "Confirmed fake";
-      const matchesStatus = !state.hideReviewed || !isResolved;
-      return matchesRisk && matchesSearch && matchesStatus;
+      const matchesDate = !state.filters.date || alert.dateIso === state.filters.date;
+      const matchesOriginCity = !state.filters.originCity || alert.originCity === state.filters.originCity;
+      const matchesOriginAirport = !state.filters.originAirport || alert.originAirport === state.filters.originAirport;
+      const matchesDestinationCity = !state.filters.destinationCity || alert.destinationCity === state.filters.destinationCity;
+      const matchesDestinationAirport = !state.filters.destinationAirport || alert.destinationAirport === state.filters.destinationAirport;
+      const matchesTripType = !state.filters.tripType || alert.tripType === state.filters.tripType;
+      const outsideTolerance = licenseGapMinutes(alert) > tolerance;
+
+      return (
+        matchesDate &&
+        matchesOriginCity &&
+        matchesOriginAirport &&
+        matchesDestinationCity &&
+        matchesDestinationAirport &&
+        matchesTripType &&
+        outsideTolerance
+      );
     })
     .sort((a, b) => {
-      if (state.sortBy === "departure") return a.departureHours - b.departureHours;
-      if (state.sortBy === "bookings") return b.bookings - a.bookings;
-      if (state.sortBy === "created") return a.createdMinutesAgo - b.createdMinutesAgo;
-      return b.score - a.score;
+      if (state.sortBy === "inventory") return collator.compare(`${cityRoute(a)} ${airportRoute(a)} ${a.inventoryId}`, `${cityRoute(b)} ${airportRoute(b)} ${b.inventoryId}`);
+      if (state.sortBy === "license") return timeToMinutes(a.licensedTime) - timeToMinutes(b.licensedTime);
+      if (state.sortBy === "tripType") return collator.compare(a.tripType, b.tripType);
+      if (state.sortBy === "supplier") return collator.compare(a.supplier, b.supplier);
+      if (state.sortBy === "error") return collator.compare(primaryError(a).code, primaryError(b).code);
+      return `${a.dateIso} ${a.advertisedTime}`.localeCompare(`${b.dateIso} ${b.advertisedTime}`);
     });
 }
 
 function renderKpis() {
-  const active = alerts.filter((alert) => alert.status !== "False positive");
-  document.querySelector("#criticalCount").textContent = active.filter((alert) => alert.risk === "Critical" && alert.departureHours <= 24).length;
-  document.querySelector("#highCount").textContent = active.filter((alert) => alert.risk === "High").length;
-  document.querySelector("#bookingCount").textContent = active.reduce((sum, alert) => sum + alert.bookings, 0);
-  document.querySelector("#repeatSupplierCount").textContent = suppliers.filter((supplier) => supplier.confirmedCases >= 2).length;
-}
-
-function statusClass(status) {
-  if (status === "Confirmed fake") return "confirmed";
-  if (status === "In review" || status === "Needs supplier clarification") return "review";
-  if (status === "False positive") return "false";
-  return "";
+  document.querySelector("#alertCount").textContent = alerts.length;
+  document.querySelector("#nearDepartureCount").textContent = alerts.filter((alert) => alert.departureHours <= 24).length;
 }
 
 function renderQueue() {
   const rows = filteredAlerts();
-  dom.queueSummary.textContent = `${rows.length} active alerts`;
+  dom.queueSummary.textContent = `${rows.length} matching ${rows.length === 1 ? "alert" : "alerts"}`;
+
+  if (!rows.length) {
+    dom.alertRows.innerHTML = '<tr><td colspan="6" class="empty-row">No alerts match the selected filters.</td></tr>';
+    return;
+  }
 
   dom.alertRows.innerHTML = rows
     .map(
-      (alert) => `
-        <tr class="${alert.id === state.selectedAlertId ? "selected" : ""}" data-alert-id="${alert.id}">
+      (alert) => {
+        const error = primaryError(alert);
+        return `
+        <tr>
           <td>
-            <div class="risk-cell">
-              <span class="risk-dot ${alert.risk}"></span>
-              <span class="score-badge">${alert.score}</span>
-            </div>
-          </td>
-          <td>
-            <span class="route-title">${alert.route}</span>
-            <span class="meta-line">${alert.airline} ${alert.flightNo} | ${alert.inventoryId}</span>
+            <span class="route-title">${cityRoute(alert)}</span>
+            <span class="meta-line">${airportRoute(alert)} | ${alert.airline} ${alert.flightNo} | ${alert.inventoryId}</span>
           </td>
           <td>
             <span class="route-title">${alert.date}, ${alert.advertisedTime}</span>
-            <span class="meta-line">${alert.bookings} affected bookings</span>
           </td>
           <td>
             <span class="route-title">${alert.licensedTime}</span>
-            <span class="meta-line">Same airline, route, date</span>
+            <span class="meta-line">${formatLicenseGap(alert)} from advertised</span>
+          </td>
+          <td>
+            <span class="trip-pill">${alert.tripType}</span>
           </td>
           <td>
             <span class="supplier-title">${alert.supplier}</span>
             <span class="meta-line">${alert.agency}</span>
           </td>
-          <td><span class="status-chip ${statusClass(alert.status)}">${alert.status}</span></td>
+          <td>
+            <span class="error-code">${error.code}</span>
+            <span class="meta-line">${error.note}</span>
+          </td>
         </tr>
-      `
-    )
-    .join("");
-
-  document.querySelectorAll("[data-alert-id]").forEach((row) => {
-    row.addEventListener("click", () => {
-      state.selectedAlertId = row.dataset.alertId;
-      renderQueue();
-      renderDetail();
-    });
-  });
-}
-
-function selectedAlert() {
-  return alerts.find((alert) => alert.id === state.selectedAlertId) || filteredAlerts()[0];
-}
-
-function renderDetail() {
-  const alert = selectedAlert();
-  if (!alert) {
-    dom.detailEmpty.classList.remove("hidden");
-    dom.detailContent.classList.add("hidden");
-    return;
-  }
-
-  state.selectedAlertId = alert.id;
-  dom.detailEmpty.classList.add("hidden");
-  dom.detailContent.classList.remove("hidden");
-
-  document.querySelector("#detailRisk").textContent = alert.risk;
-  document.querySelector("#detailRisk").className = `risk-pill ${alert.risk}`;
-  document.querySelector("#detailTitle").textContent = alert.route;
-  document.querySelector("#detailSubtitle").textContent = `${alert.airline} ${alert.flightNo} | ${alert.date}`;
-  document.querySelector("#detailScore").textContent = alert.score;
-  document.querySelector("#advertisedTime").textContent = alert.advertisedTime;
-  document.querySelector("#licensedTime").textContent = alert.licensedTime;
-  document.querySelector("#affectedBookings").textContent = alert.bookings;
-  document.querySelector("#supplierHistory").textContent = `${suppliers.find((supplier) => supplier.name === alert.supplier)?.confirmedCases || 0} cases`;
-  document.querySelector("#alertAge").textContent = `${alert.createdMinutesAgo}m old`;
-  document.querySelector("#decisionState").textContent = alert.status;
-
-  document.querySelector("#scoreBreakdown").innerHTML = alert.reasons
-    .map(
-      ([code, points, note]) => `
-        <div class="score-item">
-          <div>
-            <strong>${code}</strong>
-            <span>${note}</span>
-          </div>
-          <strong>+${points}</strong>
-        </div>
-      `
-    )
-    .join("");
-
-  document.querySelector("#timelineList").innerHTML = alert.timeline
-    .map(
-      ([time, title, note]) => `
-        <li>
-          <strong>${time} - ${title}</strong>
-          <span>${note}</span>
-        </li>
-      `
+      `;
+      }
     )
     .join("");
 }
@@ -404,9 +545,8 @@ function renderSuppliers() {
           <header>
             <div>
               <h4>${supplier.name}</h4>
-              <span class="meta-line">${supplier.trend} risk trend</span>
+              <span class="meta-line">${supplier.trend} alert trend</span>
             </div>
-            <span class="score-badge">${supplier.score}</span>
           </header>
           <div class="supplier-stats">
             <div><span>Active alerts</span><strong>${supplier.activeAlerts}</strong></div>
@@ -414,20 +554,21 @@ function renderSuppliers() {
             <div><span>Time-shift rate</span><strong>${supplier.shiftRate}</strong></div>
             <div><span>Support contact rate</span><strong>${supplier.supportRate}</strong></div>
           </div>
-          <button class="secondary-button supplier-review" type="button" data-supplier="${supplier.name}">Open supplier file</button>
+          <button class="secondary-button supplier-file" type="button" data-supplier="${supplier.name}">Open supplier file</button>
         </article>
       `
     )
     .join("");
 
-  document.querySelectorAll(".supplier-review").forEach((button) => {
-    button.addEventListener("click", () => showToast(`${button.dataset.supplier} supplier file opened in review mode.`));
+  document.querySelectorAll(".supplier-file").forEach((button) => {
+    button.addEventListener("click", () => showToast(`${button.dataset.supplier} supplier file opened.`));
   });
 }
 
 function renderReports() {
   const routeCounts = alerts.reduce((acc, alert) => {
-    acc[alert.route] = (acc[alert.route] || 0) + 1;
+    const route = cityRoute(alert);
+    acc[route] = (acc[route] || 0) + 1;
     return acc;
   }, {});
 
@@ -489,23 +630,6 @@ function drawBarChart(canvas, values, labels, color) {
   });
 }
 
-function drawRuleChart() {
-  const canvas = document.querySelector("#ruleChart");
-  if (!canvas) return;
-
-  const exact = Number(document.querySelector("#exactTolerance").value);
-  const shadow = Number(document.querySelector("#shadowWindow").value);
-  const threshold = Number(document.querySelector("#reviewThreshold").value);
-  const values = [
-    Math.round(exact * 1.4),
-    Math.round(shadow * 12),
-    threshold,
-    alerts.filter((alert) => alert.score >= threshold).length * 15
-  ];
-
-  drawBarChart(canvas, values, ["Tolerance", "Window", "Threshold", "Alerts"], "#087f8c");
-}
-
 function drawTrendChart() {
   const canvas = document.querySelector("#trendChart");
   if (!canvas) return;
@@ -523,8 +647,7 @@ function setView(view) {
   state.view = view;
   const titles = {
     alerts: "Suspicious Inventory Alerts",
-    suppliers: "Supplier Risk Board",
-    rules: "Detection Rule Lab",
+    suppliers: "Supplier History Board",
     reports: "Daily Fraud Digest"
   };
 
@@ -533,32 +656,41 @@ function setView(view) {
   dom.navItems.forEach((item) => item.classList.toggle("active", item.dataset.view === view));
 
   if (view === "suppliers") renderSuppliers();
-  if (view === "rules") drawRuleChart();
   if (view === "reports") renderReports();
 }
 
 function bindEvents() {
   dom.navItems.forEach((item) => item.addEventListener("click", () => setView(item.dataset.view)));
 
-  dom.searchInput.addEventListener("input", (event) => {
-    state.search = event.target.value;
-    renderQueue();
-    renderDetail();
+  dom.datePickerButton.addEventListener("click", () => {
+    const isOpen = !dom.datePickerPanel.hidden;
+    dom.datePickerPanel.hidden = isOpen;
+    dom.datePickerButton.setAttribute("aria-expanded", String(!isOpen));
   });
 
-  dom.riskSegments.forEach((segment) => {
-    segment.addEventListener("click", () => {
-      state.selectedRisk = segment.dataset.risk;
-      dom.riskSegments.forEach((button) => button.classList.toggle("active", button === segment));
+  dom.clearDateFilter.addEventListener("click", () => {
+    state.filters.date = "";
+    closeCalendar();
+    renderCalendar();
+    renderQueue();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (dom.datePickerPanel.hidden) return;
+    if (!event.target.closest(".calendar-filter")) closeCalendar();
+  });
+
+  dom.filterInputs.forEach((input) => {
+    input.addEventListener("input", () => {
+      state.filters[input.dataset.filter] = input.value;
+      if (input.id === "exactTolerance") {
+        document.querySelector("#exactToleranceValue").textContent = `${input.value} min`;
+      }
+      if (input.dataset.filter === "originCity" || input.dataset.filter === "destinationCity") {
+        renderFilterOptions();
+      }
       renderQueue();
-      renderDetail();
     });
-  });
-
-  dom.hideReviewedToggle.addEventListener("change", (event) => {
-    state.hideReviewed = event.target.checked;
-    renderQueue();
-    renderDetail();
   });
 
   dom.sortSelect.addEventListener("change", (event) => {
@@ -567,22 +699,34 @@ function bindEvents() {
   });
 
   document.querySelector("#refreshButton").addEventListener("click", () => {
-    showToast("Risk scores refreshed from inventory and license feeds.");
+    showToast("Inventory and license feeds refreshed.");
   });
 
   document.querySelector("#exportButton").addEventListener("click", () => {
     const csvRows = [
-      ["Alert ID", "Inventory ID", "Route", "Airline", "Supplier", "Score", "Risk", "Status"],
-      ...filteredAlerts().map((alert) => [
-        alert.id,
-        alert.inventoryId,
-        alert.route,
-        alert.airline,
-        alert.supplier,
-        alert.score,
-        alert.risk,
-        alert.status
-      ])
+      ["Alert ID", "Inventory ID", "Origin City", "Origin Airport", "Destination City", "Destination Airport", "City Route", "Airport Route", "Airline", "Flight No", "Date", "Advertised Time", "License Time", "Trip Type", "Supplier", "Error Code", "Error Note"],
+      ...filteredAlerts().map((alert) => {
+        const error = primaryError(alert);
+        return [
+          alert.id,
+          alert.inventoryId,
+          alert.originCity,
+          alert.originAirport,
+          alert.destinationCity,
+          alert.destinationAirport,
+          cityRoute(alert),
+          airportRoute(alert),
+          alert.airline,
+          alert.flightNo,
+          alert.dateIso,
+          alert.advertisedTime,
+          alert.licensedTime,
+          alert.tripType,
+          alert.supplier,
+          error.code,
+          error.note
+        ];
+      })
     ];
     const csv = csvRows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -594,32 +738,14 @@ function bindEvents() {
     URL.revokeObjectURL(url);
     showToast("Current queue exported.");
   });
-
-  document.querySelectorAll("[data-action]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const alert = selectedAlert();
-      alert.status = button.dataset.action;
-      renderQueue();
-      renderDetail();
-      showToast(`${alert.id} marked as ${alert.status}.`);
-    });
-  });
-
-  ["exactTolerance", "shadowWindow", "reviewThreshold"].forEach((id) => {
-    const input = document.querySelector(`#${id}`);
-    const output = document.querySelector(`#${id}Value`);
-    input.addEventListener("input", () => {
-      output.textContent = id === "shadowWindow" ? `${input.value} h` : id === "exactTolerance" ? `${input.value} min` : input.value;
-      drawRuleChart();
-    });
-  });
 }
 
 function init() {
+  renderFilterOptions();
+  renderCalendar();
   bindEvents();
   renderKpis();
   renderQueue();
-  renderDetail();
 }
 
 init();
