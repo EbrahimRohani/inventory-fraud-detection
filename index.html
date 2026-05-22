@@ -270,6 +270,29 @@
                 <h3>Daily fraud digest</h3>
                 <p>Snapshot for supply, operations, and support leadership.</p>
               </div>
+              <div class="report-date-filter">
+                <button class="calendar-button report-calendar-button" id="reportDatePickerButton" type="button" aria-expanded="false" aria-controls="reportDatePickerPanel">
+                  <span>Advertised date range</span>
+                  <strong id="reportDatePickerLabel">All advertised dates</strong>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 8H6v10h12V10ZM6 7v1h12V7H6Z" /></svg>
+                </button>
+                <div class="calendar-popover report-calendar-popover" id="reportDatePickerPanel" hidden>
+                  <div class="calendar-heading">
+                    <div class="calendar-nav">
+                      <button class="calendar-nav-button" id="reportPrevYearButton" type="button" aria-label="Previous year">&lt;&lt;</button>
+                      <button class="calendar-nav-button" id="reportPrevMonthButton" type="button" aria-label="Previous month">&lt;</button>
+                      <strong id="reportCalendarMonthLabel">May 2026</strong>
+                      <button class="calendar-nav-button" id="reportNextMonthButton" type="button" aria-label="Next month">&gt;</button>
+                      <button class="calendar-nav-button" id="reportNextYearButton" type="button" aria-label="Next year">&gt;&gt;</button>
+                    </div>
+                    <button type="button" id="reportClearDateFilter">Clear</button>
+                  </div>
+                  <div class="calendar-weekdays" aria-hidden="true">
+                    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                  </div>
+                  <div class="calendar-grid" id="reportCalendarGrid" role="grid" aria-label="Report advertised date range calendar"></div>
+                </div>
+              </div>
             </div>
             <div class="report-grid">
               <article class="report-card">
@@ -280,9 +303,23 @@
                 <h4>Primary reason codes</h4>
                 <ul id="topReasons"></ul>
               </article>
-              <article class="report-card wide">
-                <h4>Alert trend</h4>
-                <canvas id="trendChart" width="900" height="260" aria-label="Alert trend chart"></canvas>
+              <article class="report-card wide report-volume-card">
+                <div class="report-volume-heading">
+                  <div>
+                    <h4>Errors by advertised date</h4>
+                    <p id="reportDateSummary">0 errors across 0 dates</p>
+                  </div>
+                  <div class="report-volume-total">
+                    <span>Total errors</span>
+                    <strong id="reportAlertTotal">0</strong>
+                  </div>
+                </div>
+                <div class="report-volume-stats" aria-label="Error date summary">
+                  <div><span>Active dates</span><strong id="reportActiveDays">0</strong></div>
+                  <div><span>Peak date</span><strong id="reportPeakDay">-</strong></div>
+                  <div><span>Peak volume</span><strong id="reportPeakVolume">0</strong></div>
+                </div>
+                <div class="date-alert-timeline" id="reportAlertTimeline" aria-label="Error counts by advertised date"></div>
               </article>
             </div>
           </section>

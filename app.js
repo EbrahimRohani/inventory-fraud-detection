@@ -319,6 +319,13 @@ const state = {
       advertisedStartDate: "",
       advertisedEndDate: ""
     }
+  },
+  reports: {
+    calendarMonth: alerts[0].dateIso.slice(0, 7),
+    filters: {
+      advertisedStartDate: "",
+      advertisedEndDate: ""
+    }
   }
 };
 
@@ -366,6 +373,22 @@ const dom = {
   prevYearButton: document.querySelector("#prevYearButton"),
   nextYearButton: document.querySelector("#nextYearButton"),
   clearDateFilter: document.querySelector("#clearDateFilter"),
+  reportDatePickerButton: document.querySelector("#reportDatePickerButton"),
+  reportDatePickerLabel: document.querySelector("#reportDatePickerLabel"),
+  reportDatePickerPanel: document.querySelector("#reportDatePickerPanel"),
+  reportCalendarMonthLabel: document.querySelector("#reportCalendarMonthLabel"),
+  reportCalendarGrid: document.querySelector("#reportCalendarGrid"),
+  reportPrevMonthButton: document.querySelector("#reportPrevMonthButton"),
+  reportNextMonthButton: document.querySelector("#reportNextMonthButton"),
+  reportPrevYearButton: document.querySelector("#reportPrevYearButton"),
+  reportNextYearButton: document.querySelector("#reportNextYearButton"),
+  reportClearDateFilter: document.querySelector("#reportClearDateFilter"),
+  reportDateSummary: document.querySelector("#reportDateSummary"),
+  reportAlertTotal: document.querySelector("#reportAlertTotal"),
+  reportActiveDays: document.querySelector("#reportActiveDays"),
+  reportPeakDay: document.querySelector("#reportPeakDay"),
+  reportPeakVolume: document.querySelector("#reportPeakVolume"),
+  reportAlertTimeline: document.querySelector("#reportAlertTimeline"),
   toast: document.querySelector("#toast")
 };
 
@@ -626,6 +649,103 @@ function renderSupplierCalendar() {
 function closeSupplierCalendar() {
   dom.supplierDatePickerPanel.hidden = true;
   dom.supplierDatePickerButton.setAttribute("aria-expanded", "false");
+}
+
+function reportScopedAlerts() {
+  const { advertisedStartDate, advertisedEndDate } = state.reports.filters;
+
+  return alerts.filter((alert) => {
+    const matchesStart = !advertisedStartDate || alert.dateIso >= advertisedStartDate;
+    const matchesEnd = !advertisedEndDate || alert.dateIso <= advertisedEndDate;
+    return matchesStart && matchesEnd;
+  });
+}
+
+function formatReportDateRangeLabel() {
+  const { advertisedStartDate, advertisedEndDate } = state.reports.filters;
+  if (!advertisedStartDate && !advertisedEndDate) return "All advertised dates";
+  if (advertisedStartDate && !advertisedEndDate) return `From ${formatDateLabel(advertisedStartDate)}`;
+  if (!advertisedStartDate && advertisedEndDate) return `Until ${formatDateLabel(advertisedEndDate)}`;
+  if (advertisedStartDate === advertisedEndDate) return formatDateLabel(advertisedStartDate);
+  return `${formatDateLabel(advertisedStartDate)} - ${formatDateLabel(advertisedEndDate)}`;
+}
+
+function moveReportCalendarMonth(delta) {
+  const [year, month] = state.reports.calendarMonth.split("-").map(Number);
+  const nextMonth = new Date(year, month - 1 + delta, 1);
+  state.reports.calendarMonth = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}`;
+  renderReportCalendar();
+}
+
+function moveReportCalendarYear(delta) {
+  const [year, month] = state.reports.calendarMonth.split("-").map(Number);
+  state.reports.calendarMonth = `${year + delta}-${String(month).padStart(2, "0")}`;
+  renderReportCalendar();
+}
+
+function selectReportAdvertisedDate(dateIso) {
+  const { advertisedStartDate, advertisedEndDate } = state.reports.filters;
+
+  if (!advertisedStartDate || advertisedEndDate || dateIso < advertisedStartDate) {
+    state.reports.filters.advertisedStartDate = dateIso;
+    state.reports.filters.advertisedEndDate = "";
+  } else {
+    state.reports.filters.advertisedEndDate = dateIso;
+    closeReportCalendar();
+  }
+}
+
+function renderReportCalendar() {
+  const [year, month] = state.reports.calendarMonth.split("-").map(Number);
+  const monthIndex = month - 1;
+  const firstDay = new Date(year, monthIndex, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const { advertisedStartDate, advertisedEndDate } = state.reports.filters;
+
+  dom.reportCalendarMonthLabel.textContent = new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric"
+  }).format(new Date(year, monthIndex, 1));
+  dom.reportDatePickerLabel.textContent = formatReportDateRangeLabel();
+
+  const blanks = Array.from({ length: firstDay }, () => '<span class="calendar-empty"></span>');
+  const days = Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
+    const dateIso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const hasAlerts = availableDates.has(dateIso);
+    const isStart = advertisedStartDate === dateIso;
+    const isEnd = advertisedEndDate === dateIso;
+    const inRange = advertisedStartDate && advertisedEndDate && dateIso > advertisedStartDate && dateIso < advertisedEndDate;
+    const classes = [
+      hasAlerts ? "has-alerts" : "",
+      isStart ? "range-start" : "",
+      isEnd ? "range-end" : "",
+      inRange ? "in-range" : ""
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return `
+      <button class="${classes}" type="button" data-report-date="${dateIso}" aria-pressed="${isStart || isEnd}">
+        ${day}
+      </button>
+    `;
+  });
+
+  dom.reportCalendarGrid.innerHTML = [...blanks, ...days].join("");
+  dom.reportCalendarGrid.querySelectorAll("[data-report-date]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      selectReportAdvertisedDate(button.dataset.reportDate);
+      renderReportCalendar();
+      renderReports();
+    });
+  });
+}
+
+function closeReportCalendar() {
+  dom.reportDatePickerPanel.hidden = true;
+  dom.reportDatePickerButton.setAttribute("aria-expanded", "false");
 }
 
 function primaryError(alert) {
@@ -1135,19 +1255,118 @@ function openSupplierFromQueue(supplierName) {
   setView("suppliers");
 }
 
+function formatWeekdayLabel(dateIso) {
+  const [year, month, day] = dateIso.split("-").map(Number);
+  return new Intl.DateTimeFormat("en", { weekday: "short" }).format(new Date(year, month - 1, day));
+}
+
+function dateFromIso(dateIso) {
+  const [year, month, day] = dateIso.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function isoFromDate(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function addDays(dateIso, days) {
+  const date = dateFromIso(dateIso);
+  date.setDate(date.getDate() + days);
+  return isoFromDate(date);
+}
+
+function daysBetween(startDateIso, endDateIso) {
+  const dayMs = 24 * 60 * 60 * 1000;
+  return Math.round((dateFromIso(endDateIso) - dateFromIso(startDateIso)) / dayMs);
+}
+
+function dateRangeEntries(startDateIso, endDateIso) {
+  const days = Math.max(0, daysBetween(startDateIso, endDateIso));
+  return Array.from({ length: days + 1 }, (_, index) => addDays(startDateIso, index));
+}
+
+function reportTimelineDates() {
+  const allDates = [...new Set(alerts.map((alert) => alert.dateIso))].sort((a, b) => collator.compare(a, b));
+  const earliestAlertDate = allDates[0] || state.reports.calendarMonth + "-01";
+  const latestAlertDate = allDates[allDates.length - 1] || earliestAlertDate;
+  const { advertisedStartDate, advertisedEndDate } = state.reports.filters;
+
+  let rangeStart = advertisedStartDate || "";
+  let rangeEnd = advertisedEndDate || "";
+
+  if (!rangeStart && !rangeEnd) {
+    rangeEnd = latestAlertDate;
+    rangeStart = addDays(rangeEnd, -6);
+  } else if (rangeStart && !rangeEnd) {
+    const minimumEndDate = addDays(rangeStart, 6);
+    rangeEnd = latestAlertDate > minimumEndDate ? latestAlertDate : minimumEndDate;
+  } else if (!rangeStart && rangeEnd) {
+    const minimumStartDate = addDays(rangeEnd, -6);
+    rangeStart = earliestAlertDate < minimumStartDate ? earliestAlertDate : minimumStartDate;
+  }
+
+  if (rangeStart > rangeEnd) {
+    [rangeStart, rangeEnd] = [rangeEnd, rangeStart];
+  }
+
+  if (daysBetween(rangeStart, rangeEnd) < 6) {
+    rangeStart = addDays(rangeEnd, -6);
+  }
+
+  return dateRangeEntries(rangeStart, rangeEnd);
+}
+
+function renderReportAlertTimeline(reportAlerts) {
+  const dateCounts = countValues(reportAlerts.map((alert) => alert.dateIso));
+  const chartDates = reportTimelineDates();
+  const dateEntries = chartDates.map((dateIso) => [dateIso, dateCounts[dateIso] || 0]);
+  const activeDateCount = dateEntries.filter(([, count]) => count > 0).length;
+  const peakEntry = [...dateEntries].sort((a, b) => b[1] - a[1] || collator.compare(a[0], b[0]))[0] || null;
+  const peakVolume = peakEntry?.[1] || 0;
+
+  dom.reportDateSummary.textContent = `${reportAlerts.length} ${reportAlerts.length === 1 ? "error" : "errors"} across ${dateEntries.length} ${dateEntries.length === 1 ? "day" : "days"}`;
+  dom.reportAlertTotal.textContent = reportAlerts.length;
+  dom.reportActiveDays.textContent = activeDateCount;
+  dom.reportPeakDay.textContent = peakVolume ? formatDateLabel(peakEntry[0]) : "-";
+  dom.reportPeakVolume.textContent = peakVolume;
+
+  dom.reportAlertTimeline.innerHTML = dateEntries.length
+    ? dateEntries
+        .map(([dateIso, count], index) => {
+          const percentage = peakVolume ? Math.max(8, Math.round((count / peakVolume) * 100)) : 0;
+          return `
+            <article class="date-volume-column" style="--column-index: ${index}; --bar-height: ${percentage}%;">
+              <strong class="date-volume-count">${count}</strong>
+              <div class="date-volume-bar" aria-hidden="true">
+                <span></span>
+              </div>
+              <div class="date-volume-label">
+                <strong>${formatDateLabel(dateIso)}</strong>
+                <span>${formatWeekdayLabel(dateIso)}</span>
+              </div>
+            </article>
+          `;
+        })
+        .join("")
+    : '<p class="empty-row">No errors match this date range.</p>';
+}
+
 function renderReports() {
-  const routeCounts = alerts.reduce((acc, alert) => {
+  const reportAlerts = reportScopedAlerts();
+  const routeCounts = reportAlerts.reduce((acc, alert) => {
     const route = cityRoute(alert);
     acc[route] = (acc[route] || 0) + 1;
     return acc;
   }, {});
 
+  renderReportAlertTimeline(reportAlerts);
+
   document.querySelector("#topRoutes").innerHTML = Object.entries(routeCounts)
     .sort((a, b) => b[1] - a[1])
     .map(([route, count]) => `<li><span>${route}</span><strong>${count} alerts</strong></li>`)
-    .join("");
+    .join("") || '<li><span>No routes</span><strong>0 alerts</strong></li>';
 
-  const reasons = alerts.flatMap((alert) => alert.reasons.map(([code]) => code));
+  const reasons = reportAlerts.flatMap((alert) => alert.reasons.map(([code]) => code));
   const reasonCounts = reasons.reduce((acc, code) => {
     acc[code] = (acc[code] || 0) + 1;
     return acc;
@@ -1157,53 +1376,7 @@ function renderReports() {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([code, count]) => `<li><span>${code}</span><strong>${count}</strong></li>`)
-    .join("");
-
-  drawTrendChart();
-}
-
-function drawBarChart(canvas, values, labels, color) {
-  const ctx = canvas.getContext("2d");
-  const width = canvas.width;
-  const height = canvas.height;
-  ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "#fafafa";
-  ctx.fillRect(0, 0, width, height);
-
-  const max = Math.max(...values, 1);
-  const padding = 36;
-  const barGap = 18;
-  const barWidth = (width - padding * 2 - barGap * (values.length - 1)) / values.length;
-
-  ctx.strokeStyle = "#e4e4e7";
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 4; i += 1) {
-    const y = padding + i * ((height - padding * 2) / 3);
-    ctx.beginPath();
-    ctx.moveTo(padding, y);
-    ctx.lineTo(width - padding, y);
-    ctx.stroke();
-  }
-
-  values.forEach((value, index) => {
-    const barHeight = (value / max) * (height - padding * 2);
-    const x = padding + index * (barWidth + barGap);
-    const y = height - padding - barHeight;
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, barWidth, barHeight);
-    ctx.fillStyle = "#18181b";
-    ctx.font = "700 14px Inter, sans-serif";
-    ctx.fillText(String(value), x + 4, y - 8);
-    ctx.fillStyle = "#71717a";
-    ctx.font = "12px Inter, sans-serif";
-    ctx.fillText(labels[index], x, height - 12);
-  });
-}
-
-function drawTrendChart() {
-  const canvas = document.querySelector("#trendChart");
-  if (!canvas) return;
-  drawBarChart(canvas, [12, 18, 21, 16, 26, 31, 29], ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"], "#0891b2");
+    .join("") || '<li><span>No reason codes</span><strong>0</strong></li>';
 }
 
 function showToast(message) {
@@ -1373,6 +1546,30 @@ function bindEvents() {
     if (!event.target.closest(".supplier-date-filter")) closeSupplierCalendar();
   });
 
+  dom.reportDatePickerButton.addEventListener("click", () => {
+    const isOpen = !dom.reportDatePickerPanel.hidden;
+    dom.reportDatePickerPanel.hidden = isOpen;
+    dom.reportDatePickerButton.setAttribute("aria-expanded", String(!isOpen));
+  });
+
+  dom.reportClearDateFilter.addEventListener("click", () => {
+    state.reports.filters.advertisedStartDate = "";
+    state.reports.filters.advertisedEndDate = "";
+    closeReportCalendar();
+    renderReportCalendar();
+    renderReports();
+  });
+
+  dom.reportPrevMonthButton.addEventListener("click", () => moveReportCalendarMonth(-1));
+  dom.reportNextMonthButton.addEventListener("click", () => moveReportCalendarMonth(1));
+  dom.reportPrevYearButton.addEventListener("click", () => moveReportCalendarYear(-1));
+  dom.reportNextYearButton.addEventListener("click", () => moveReportCalendarYear(1));
+
+  document.addEventListener("click", (event) => {
+    if (dom.reportDatePickerPanel.hidden) return;
+    if (!event.target.closest(".report-date-filter")) closeReportCalendar();
+  });
+
   dom.supplierRows.addEventListener("click", (event) => {
     const row = event.target.closest("[data-supplier]");
     if (!row) return;
@@ -1437,6 +1634,7 @@ function init() {
   renderSupplierFilterOptions();
   renderCalendar();
   renderSupplierCalendar();
+  renderReportCalendar();
   bindEvents();
   renderKpis();
   renderQueue();
