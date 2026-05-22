@@ -271,6 +271,171 @@ const alerts = [
       ["09:12", "License check failed", "No exact Pegasus operation at the advertised departure time."],
       ["09:40", "Alert created", "Airport-specific license mismatch detected."]
     ]
+  },
+  {
+    id: "AL-1032",
+    inventoryId: "INV-IR-44108",
+    airline: "Iran Air",
+    flightNo: "IR-226",
+    route: "THR -> KIH",
+    originCity: "Tehran",
+    originAirport: "THR",
+    destinationCity: "Kish",
+    destinationAirport: "KIH",
+    origin: "THR",
+    destination: "KIH",
+    date: "15 May",
+    dateIso: "2026-05-15",
+    advertisedTime: "09:20",
+    licensedTime: "10:35",
+    tripType: "Oneway",
+    flightScope: "Domestic",
+    supplier: "Kavir Charter",
+    agency: "Agency 0920",
+    createdMinutesAgo: 402,
+    departureHours: 64,
+    reasons: [
+      ["NO_LICENSE_MATCH", "No Iran Air license supports 09:20 on THR -> KIH."],
+      ["NEAR_REAL_FLIGHT_TIME", "Advertised time is 75 minutes before a licensed operation."],
+      ["SUSPICIOUS_SEAT_AVAILABILITY", "Seat count remained fixed across supplier refreshes."]
+    ],
+    timeline: [
+      ["07:12", "Inventory opened", "Supplier published an early morning Kish listing."],
+      ["07:34", "License miss", "No exact license found for the advertised time."],
+      ["08:05", "Alert created", "Mismatch persisted after a second inventory snapshot."]
+    ]
+  },
+  {
+    id: "AL-1033",
+    inventoryId: "INV-QB-66120",
+    airline: "Qeshm Air",
+    flightNo: "QB-1412",
+    route: "MHD -> THR",
+    originCity: "Mashhad",
+    originAirport: "MHD",
+    destinationCity: "Tehran",
+    destinationAirport: "THR",
+    origin: "MHD",
+    destination: "THR",
+    date: "16 May",
+    dateIso: "2026-05-16",
+    advertisedTime: "14:10",
+    licensedTime: "15:30",
+    tripType: "Roundtrip",
+    flightScope: "Domestic",
+    supplier: "Pars Sky Supply",
+    agency: "Agency 2044",
+    createdMinutesAgo: 376,
+    departureHours: 58,
+    reasons: [
+      ["NEAR_REAL_FLIGHT_TIME", "Advertised time is close to a licensed Qeshm Air flight."],
+      ["AMBIGUOUS_LICENSE_MATCH", "Two nearby licenses need manual validation."],
+      ["SUPPLIER_HISTORY", "Supplier has previous route-time mismatch cases."]
+    ],
+    timeline: [
+      ["10:18", "Inventory opened", "Supplier listing appeared near a licensed departure."],
+      ["10:31", "Ambiguous match", "License feed returned two nearby candidates."],
+      ["10:52", "Alert created", "Operations review requested for the route-time pair."]
+    ]
+  },
+  {
+    id: "AL-1034",
+    inventoryId: "INV-TK-11983",
+    airline: "Turkish Airlines",
+    flightNo: "TK-875",
+    route: "IKA -> IST",
+    originCity: "Tehran",
+    originAirport: "IKA",
+    destinationCity: "Istanbul",
+    destinationAirport: "IST",
+    origin: "IKA",
+    destination: "IST",
+    date: "17 May",
+    dateIso: "2026-05-17",
+    advertisedTime: "03:50",
+    licensedTime: "05:05",
+    tripType: "Oneway",
+    flightScope: "International",
+    supplier: "Global Charter Desk",
+    agency: "Agency 4401",
+    createdMinutesAgo: 344,
+    departureHours: 47,
+    reasons: [
+      ["AIRPORT_SCOPE_MISMATCH", "Istanbul city matched, but the licensed airport-time pair did not."],
+      ["NO_LICENSE_MATCH", "No exact TK-875 license exists for 03:50 at IST."],
+      ["NEAR_REAL_FLIGHT_TIME", "Advertised time is 75 minutes before a licensed operation."]
+    ],
+    timeline: [
+      ["06:42", "Inventory opened", "International inventory was published with airport-specific mismatch risk."],
+      ["07:03", "Airport check failed", "IST license source did not support the advertised time."],
+      ["07:29", "Alert created", "Airport-specific license mismatch detected."]
+    ]
+  },
+  {
+    id: "AL-1035",
+    inventoryId: "INV-EP-50671",
+    airline: "Aseman Airlines",
+    flightNo: "EP-2120",
+    route: "SYZ -> THR",
+    originCity: "Shiraz",
+    originAirport: "SYZ",
+    destinationCity: "Tehran",
+    destinationAirport: "THR",
+    origin: "SYZ",
+    destination: "THR",
+    date: "18 May",
+    dateIso: "2026-05-18",
+    advertisedTime: "18:45",
+    licensedTime: "20:15",
+    tripType: "Roundtrip",
+    flightScope: "Domestic",
+    supplier: "Mehr Air Desk",
+    agency: "Agency 3310",
+    createdMinutesAgo: 288,
+    departureHours: 38,
+    reasons: [
+      ["NO_LICENSE_MATCH", "No Aseman Airlines license supports 18:45 on SYZ -> THR."],
+      ["MISSING_OR_INVALID_FLIGHT_NUMBER", "Flight number did not align with the license feed."],
+      ["LAST_MINUTE_TIME_CHANGE_PATTERN", "Supplier has repeated late route-time changes."]
+    ],
+    timeline: [
+      ["12:04", "Inventory opened", "Supplier published a shifted evening departure."],
+      ["12:27", "Flight number check failed", "Flight number did not match the licensed schedule."],
+      ["12:41", "Alert created", "License mismatch evidence was generated."]
+    ]
+  },
+  {
+    id: "AL-1036",
+    inventoryId: "INV-PC-33162",
+    airline: "Pegasus Airlines",
+    flightNo: "PC-519",
+    route: "IKA -> SAW",
+    originCity: "Tehran",
+    originAirport: "IKA",
+    destinationCity: "Istanbul",
+    destinationAirport: "SAW",
+    origin: "IKA",
+    destination: "SAW",
+    date: "19 May",
+    dateIso: "2026-05-19",
+    advertisedTime: "10:25",
+    licensedTime: "11:45",
+    tripType: "Oneway",
+    flightScope: "International",
+    supplier: "Anatolia Seat Hub",
+    agency: "Agency 4401",
+    createdMinutesAgo: 214,
+    departureHours: 33,
+    reasons: [
+      ["NO_LICENSE_MATCH", "No Pegasus license supports 10:25 for IKA -> SAW."],
+      ["AIRPORT_SCOPE_MISMATCH", "Istanbul airport scope must be validated against SAW specifically."],
+      ["SUSPICIOUS_SEAT_AVAILABILITY", "Availability remained fixed after repeated checks."]
+    ],
+    timeline: [
+      ["08:03", "Inventory opened", "Supplier listed Sabiha Gokcen with a shifted departure time."],
+      ["08:21", "License check failed", "No exact Pegasus operation at the advertised time."],
+      ["08:52", "Alert created", "Airport-specific mismatch remained active."]
+    ]
   }
 ];
 
@@ -1333,10 +1498,11 @@ function renderReportAlertTimeline(reportAlerts) {
   dom.reportAlertTimeline.innerHTML = dateEntries.length
     ? dateEntries
         .map(([dateIso, count], index) => {
-          const percentage = peakVolume ? Math.max(8, Math.round((count / peakVolume) * 100)) : 0;
+          const percentage = peakVolume && count ? Math.max(8, Math.round((count / peakVolume) * 100)) : 0;
+          const countLabel = count ? `${count} ${count === 1 ? "error" : "errors"}` : "";
           return `
-            <article class="date-volume-column" style="--column-index: ${index}; --bar-height: ${percentage}%;">
-              <strong class="date-volume-count">${count}</strong>
+            <article class="date-volume-column ${count ? "" : "empty"}" tabindex="0" style="--column-index: ${index}; --bar-height: ${percentage}%;" aria-label="${formatDateLabel(dateIso)}: ${count} ${count === 1 ? "error" : "errors"}">
+              <strong class="date-volume-count">${countLabel}</strong>
               <div class="date-volume-bar" aria-hidden="true">
                 <span></span>
               </div>

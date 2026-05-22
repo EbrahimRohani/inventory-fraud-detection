@@ -1167,21 +1167,41 @@ tbody tr:hover {
 
 .date-volume-column {
   display: grid;
-  grid-template-rows: 24px 170px auto;
+  grid-template-rows: 32px 170px auto;
   align-items: end;
   gap: 10px;
   min-width: 0;
   padding: 6px 8px 0;
+  color: inherit;
+  text-align: center;
   opacity: 0;
   transform: translateY(10px);
   animation: dateColumnIn 420ms ease both;
   animation-delay: calc(var(--column-index, 0) * 70ms + 90ms);
 }
 
+.date-volume-column:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+
 .date-volume-count {
   justify-self: center;
   color: var(--ink);
+  font-size: 0.8rem;
   font-weight: 900;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  white-space: nowrap;
+}
+
+.date-volume-column:hover .date-volume-count,
+.date-volume-column:focus-visible .date-volume-count {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .date-volume-label {
@@ -1207,6 +1227,21 @@ tbody tr:hover {
   background:
     linear-gradient(to top, rgba(8, 145, 178, 0.08), transparent),
     var(--surface-2);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.date-volume-column:hover .date-volume-bar,
+.date-volume-column:focus-visible .date-volume-bar {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12);
+}
+
+.date-volume-column:hover .date-volume-bar,
+.date-volume-column:focus-visible .date-volume-bar {
+  transform: translateY(-2px);
 }
 
 .date-volume-bar span {
@@ -1218,6 +1253,14 @@ tbody tr:hover {
   transform-origin: bottom center;
   animation: dateBarGrow 760ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   animation-delay: calc(var(--column-index, 0) * 70ms + 180ms);
+}
+
+.date-volume-column.empty .date-volume-bar {
+  background: var(--surface-2);
+}
+
+.date-volume-column.empty .date-volume-bar span {
+  display: none;
 }
 
 @keyframes reportCardIn {
@@ -1416,7 +1459,7 @@ tbody tr:hover {
   }
 
   .date-volume-column {
-    grid-template-rows: 22px 140px auto;
+    grid-template-rows: 30px 140px auto;
     padding-inline: 4px;
   }
 
