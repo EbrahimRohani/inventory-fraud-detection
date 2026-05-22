@@ -274,47 +274,15 @@ const alerts = [
   }
 ];
 
-const suppliers = [
-  {
-    name: "Aseman Charter Co.",
-    activeAlerts: 2,
-    confirmedCases: 4,
-    shiftRate: "34%",
-    supportRate: "18%",
-    trend: "Rising"
-  },
-  {
-    name: "Kavir Charter",
-    activeAlerts: 1,
-    confirmedCases: 3,
-    shiftRate: "31%",
-    supportRate: "14%",
-    trend: "Rising"
-  },
-  {
-    name: "Pars Sky Supply",
-    activeAlerts: 1,
-    confirmedCases: 2,
-    shiftRate: "22%",
-    supportRate: "10%",
-    trend: "Stable"
-  },
-  {
-    name: "Mehr Air Desk",
-    activeAlerts: 1,
-    confirmedCases: 1,
-    shiftRate: "18%",
-    supportRate: "7%",
-    trend: "Stable"
-  },
-  {
-    name: "Shomal Ticket Hub",
-    activeAlerts: 1,
-    confirmedCases: 1,
-    shiftRate: "9%",
-    supportRate: "4%",
-    trend: "Watch"
-  }
+const supplierDirectory = [
+  "Anatolia Seat Hub",
+  "Aseman Charter Co.",
+  "Global Charter Desk",
+  "Kavir Charter",
+  "Mehr Air Desk",
+  "Pars Sky Supply",
+  "Shomal Ticket Hub",
+  ...Array.from({ length: 214 }, (_, index) => `Market Supplier ${String(index + 1).padStart(3, "0")}`)
 ];
 
 const state = {
@@ -335,6 +303,22 @@ const state = {
     flightScope: "",
     error: "",
     exactTolerance: "15"
+  },
+  suppliers: {
+    sortBy: "activeAlerts",
+    sortDirection: "desc",
+    currentPage: 1,
+    pageSize: 25,
+    selectedSupplier: "",
+    detailStartDate: "",
+    detailEndDate: "",
+    filters: {
+      search: "",
+      error: "",
+      flightScope: "",
+      tripType: "",
+      visibility: "flagged"
+    }
   }
 };
 
@@ -350,6 +334,18 @@ const dom = {
   paginationPages: document.querySelector("#paginationPages"),
   prevPageButton: document.querySelector("#prevPageButton"),
   nextPageButton: document.querySelector("#nextPageButton"),
+  supplierActiveAlertCount: document.querySelector("#supplierActiveAlertCount"),
+  supplierSummary: document.querySelector("#supplierSummary"),
+  supplierActiveCount: document.querySelector("#supplierActiveCount"),
+  supplierTopError: document.querySelector("#supplierTopError"),
+  supplierFilterInputs: document.querySelectorAll("[data-supplier-filter]"),
+  supplierSortButtons: document.querySelectorAll("[data-supplier-sort]"),
+  supplierRows: document.querySelector("#supplierRows"),
+  supplierDetailPanel: document.querySelector("#supplierDetailPanel"),
+  supplierPaginationSummary: document.querySelector("#supplierPaginationSummary"),
+  supplierPaginationPages: document.querySelector("#supplierPaginationPages"),
+  supplierPrevPageButton: document.querySelector("#supplierPrevPageButton"),
+  supplierNextPageButton: document.querySelector("#supplierNextPageButton"),
   datePickerButton: document.querySelector("#datePickerButton"),
   datePickerLabel: document.querySelector("#datePickerLabel"),
   datePickerPanel: document.querySelector("#datePickerPanel"),
@@ -699,32 +695,323 @@ function renderQueue() {
     .join("");
 }
 
+function countValues(values) {
+  return values.reduce((acc, value) => {
+    acc[value] = (acc[value] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function sortedCountEntries(counts) {
+  return Object.entries(counts).sort((a, b) => b[1] - a[1] || collator.compare(a[0], b[0]));
+}
+
+function topCountValue(counts, fallback = "-") {
+  return sortedCountEntries(counts)[0]?.[0] || fallback;
+}
+
+function formatDateTimeLabel(dateIso, time) {
+  if (!dateIso) return "-";
+  return `${formatDateLabel(dateIso)}, ${time}`;
+}
+
+function supplierNames() {
+  return [...new Set([...supplierDirectory, ...alerts.map((alert) => alert.supplier)])].sort((a, b) => collator.compare(a, b));
+}
+
+function supplierRowsData() {
+  return supplierNames().map((name) => {
+    const supplierAlerts = alerts.filter((alert) => alert.supplier === name);
+    const routeCounts = countValues(supplierAlerts.map((alert) => cityRoute(alert)));
+    const errorCounts = countValues(supplierAlerts.map((alert) => primaryError(alert).code));
+    const flightScopeCounts = countValues(supplierAlerts.map((alert) => alert.flightScope));
+    const tripTypeCounts = countValues(supplierAlerts.map((alert) => alert.tripType));
+    const latestAlert =
+      [...supplierAlerts].sort((a, b) => collator.compare(`${b.dateIso} ${b.advertisedTime}`, `${a.dateIso} ${a.advertisedTime}`))[0] || null;
+    const gapTotal = supplierAlerts.reduce((sum, alert) => sum + licenseGapMinutes(alert), 0);
+    return {
+      name,
+      activeAlerts: supplierAlerts.length,
+      routes: Object.keys(routeCounts).length,
+      routeCounts,
+      errorCounts,
+      flightScopeCounts,
+      tripTypeCounts,
+      commonError: topCountValue(errorCounts),
+      latestAlert,
+      latestAlertSort: latestAlert ? `${latestAlert.dateIso} ${latestAlert.advertisedTime}` : "",
+      avgGap: supplierAlerts.length ? Math.round(gapTotal / supplierAlerts.length) : 0,
+      alerts: supplierAlerts
+    };
+  });
+}
+
+function filteredSuppliers() {
+  const filters = state.suppliers.filters;
+  const search = filters.search.trim().toLowerCase();
+
+  return supplierRowsData()
+    .filter((supplier) => {
+      const matchesSearch = !search || supplier.name.toLowerCase().includes(search);
+      const matchesError = !filters.error || Boolean(supplier.errorCounts[filters.error]);
+      const matchesFlightScope = !filters.flightScope || Boolean(supplier.flightScopeCounts[filters.flightScope]);
+      const matchesTripType = !filters.tripType || Boolean(supplier.tripTypeCounts[filters.tripType]);
+      const matchesVisibility = filters.visibility === "all" || supplier.activeAlerts > 0;
+
+      return matchesSearch && matchesError && matchesFlightScope && matchesTripType && matchesVisibility;
+    })
+    .sort((a, b) => {
+      const result = compareSortValues(supplierSortValue(a, state.suppliers.sortBy), supplierSortValue(b, state.suppliers.sortBy));
+      return state.suppliers.sortDirection === "asc" ? result : -result;
+    });
+}
+
+function supplierSortValue(supplier, key) {
+  if (key === "name") return supplier.name;
+  if (key === "activeAlerts") return supplier.activeAlerts;
+  if (key === "routes") return supplier.routes;
+  if (key === "commonError") return supplier.commonError;
+  if (key === "latestAlert") return supplier.latestAlertSort;
+  if (key === "avgGap") return supplier.avgGap;
+  return "";
+}
+
+function renderSupplierFilterOptions() {
+  state.suppliers.filters.error = fillSelect(
+    "supplierErrorFilter",
+    "errors",
+    [...new Set(alerts.map((alert) => primaryError(alert).code))].sort((a, b) => collator.compare(a, b)),
+    state.suppliers.filters.error
+  );
+  state.suppliers.filters.flightScope = fillSelect(
+    "supplierFlightScopeFilter",
+    "flight types",
+    uniqueValues("flightScope"),
+    state.suppliers.filters.flightScope
+  );
+  state.suppliers.filters.tripType = fillSelect("supplierTripTypeFilter", "trip types", uniqueValues("tripType"), state.suppliers.filters.tripType);
+  document.querySelector("#supplierSearch").value = state.suppliers.filters.search;
+  document.querySelectorAll("[name='supplierVisibility']").forEach((input) => {
+    input.checked = input.value === state.suppliers.filters.visibility;
+  });
+}
+
+function renderSupplierSortHeaders() {
+  dom.supplierSortButtons.forEach((button) => {
+    const isActive = button.dataset.supplierSort === state.suppliers.sortBy;
+    button.classList.toggle("active", isActive);
+    button.classList.toggle("descending", isActive && state.suppliers.sortDirection === "desc");
+    button.setAttribute("aria-sort", isActive ? (state.suppliers.sortDirection === "asc" ? "ascending" : "descending") : "none");
+  });
+}
+
+function resetSupplierPagination() {
+  state.suppliers.currentPage = 1;
+}
+
+function supplierTotalPagesFor(rows) {
+  return Math.max(1, Math.ceil(rows.length / state.suppliers.pageSize));
+}
+
+function clampSupplierPage(rows) {
+  const totalPages = supplierTotalPagesFor(rows);
+  state.suppliers.currentPage = Math.min(Math.max(state.suppliers.currentPage, 1), totalPages);
+  return totalPages;
+}
+
+function paginatedSuppliers(rows) {
+  clampSupplierPage(rows);
+  const start = (state.suppliers.currentPage - 1) * state.suppliers.pageSize;
+  return rows.slice(start, start + state.suppliers.pageSize);
+}
+
+function supplierPaginationButton(pageNumber) {
+  const active = pageNumber === state.suppliers.currentPage;
+  return `
+    <button class="page-button ${active ? "active" : ""}" type="button" data-supplier-page="${pageNumber}" ${active ? 'aria-current="page"' : ""}>
+      ${pageNumber}
+    </button>
+  `;
+}
+
+function renderSupplierPagination(rows) {
+  const totalRows = rows.length;
+  const totalPages = clampSupplierPage(rows);
+  const startRow = totalRows ? (state.suppliers.currentPage - 1) * state.suppliers.pageSize + 1 : 0;
+  const endRow = Math.min(state.suppliers.currentPage * state.suppliers.pageSize, totalRows);
+
+  dom.supplierPaginationSummary.textContent = totalRows
+    ? `Showing ${startRow}-${endRow} of ${totalRows} ${totalRows === 1 ? "supplier" : "suppliers"}`
+    : "Showing 0 of 0 suppliers";
+  dom.supplierPrevPageButton.disabled = state.suppliers.currentPage === 1;
+  dom.supplierNextPageButton.disabled = state.suppliers.currentPage === totalPages;
+
+  const pages = [];
+  if (totalPages <= 7) {
+    for (let page = 1; page <= totalPages; page += 1) pages.push(supplierPaginationButton(page));
+  } else {
+    const middleStart = Math.max(2, state.suppliers.currentPage - 1);
+    const middleEnd = Math.min(totalPages - 1, state.suppliers.currentPage + 1);
+    pages.push(supplierPaginationButton(1));
+    if (middleStart > 2) pages.push('<span class="page-ellipsis">...</span>');
+    for (let page = middleStart; page <= middleEnd; page += 1) pages.push(supplierPaginationButton(page));
+    if (middleEnd < totalPages - 1) pages.push('<span class="page-ellipsis">...</span>');
+    pages.push(supplierPaginationButton(totalPages));
+  }
+
+  dom.supplierPaginationPages.innerHTML = pages.join("");
+}
+
+function renderSupplierMetrics(rows) {
+  const activeRows = rows.filter((supplier) => supplier.activeAlerts > 0);
+  const activeAlertCount = rows.reduce((sum, supplier) => sum + supplier.activeAlerts, 0);
+  const errorCounts = rows.reduce((acc, supplier) => {
+    Object.entries(supplier.errorCounts).forEach(([code, count]) => {
+      acc[code] = (acc[code] || 0) + count;
+    });
+    return acc;
+  }, {});
+
+  dom.supplierSummary.textContent = `${rows.length} matching ${rows.length === 1 ? "supplier" : "suppliers"}`;
+  dom.supplierActiveAlertCount.textContent = activeAlertCount;
+  dom.supplierActiveCount.textContent = activeRows.length;
+  dom.supplierTopError.textContent = topCountValue(errorCounts);
+}
+
+function supplierDetailAlerts(supplier) {
+  return [...supplier.alerts]
+    .filter((alert) => {
+      const matchesStart = !state.suppliers.detailStartDate || alert.dateIso >= state.suppliers.detailStartDate;
+      const matchesEnd = !state.suppliers.detailEndDate || alert.dateIso <= state.suppliers.detailEndDate;
+      return matchesStart && matchesEnd;
+    })
+    .sort((a, b) => collator.compare(`${b.dateIso} ${b.advertisedTime}`, `${a.dateIso} ${a.advertisedTime}`));
+}
+
+function renderSupplierDetail(supplier) {
+  if (!supplier) {
+    dom.supplierDetailPanel.innerHTML = '<p class="empty-row">Select a supplier to review active alerts.</p>';
+    return;
+  }
+
+  const detailAlerts = supplierDetailAlerts(supplier);
+  const errorCounts = countValues(detailAlerts.map((alert) => primaryError(alert).code));
+  const routeCounts = countValues(detailAlerts.map((alert) => cityRoute(alert)));
+  const errorEntries = sortedCountEntries(errorCounts);
+  const routeEntries = sortedCountEntries(routeCounts);
+  const latestDetailAlert = detailAlerts[0] || null;
+  const avgDetailGap = detailAlerts.length
+    ? Math.round(detailAlerts.reduce((sum, alert) => sum + licenseGapMinutes(alert), 0) / detailAlerts.length)
+    : 0;
+  const errorItems = errorEntries
+    .map(([code, count]) => `<li><span>${code}</span><strong>${count}</strong></li>`)
+    .join("");
+  const routeItems = routeEntries
+    .map(([route, count]) => `<li><span>${route}</span><strong>${count}</strong></li>`)
+    .join("");
+  const activeAlertRows = detailAlerts
+    .map((alert) => {
+      const error = primaryError(alert);
+      return `
+        <tr>
+          <td>${formatDateTimeLabel(alert.dateIso, alert.advertisedTime)}</td>
+          <td>${cityRoute(alert)}</td>
+          <td>${alert.flightNo}</td>
+          <td><span class="error-code">${error.code}</span></td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  dom.supplierDetailPanel.innerHTML = `
+    <div class="supplier-detail-heading">
+      <div>
+        <h4>${supplier.name}</h4>
+      </div>
+    </div>
+    <div class="supplier-detail-filters" aria-label="Supplier active alert date range">
+      <label>
+        <span>From</span>
+        <input type="date" value="${state.suppliers.detailStartDate}" data-supplier-detail-date="start" />
+      </label>
+      <label>
+        <span>To</span>
+        <input type="date" value="${state.suppliers.detailEndDate}" data-supplier-detail-date="end" />
+      </label>
+      <button class="secondary-button" type="button" data-clear-supplier-detail-dates>Clear</button>
+    </div>
+    <div class="supplier-detail-stats">
+      <div><span>Active alerts</span><strong>${detailAlerts.length}</strong></div>
+      <div><span>Latest advertised</span><strong>${formatDateTimeLabel(latestDetailAlert?.dateIso, latestDetailAlert?.advertisedTime)}</strong></div>
+      <div><span>Average gap</span><strong>${detailAlerts.length ? `${avgDetailGap} min` : "-"}</strong></div>
+      <div><span>Alerted routes</span><strong>${routeEntries.length}</strong></div>
+    </div>
+    <div class="supplier-breakdowns">
+      <section class="supplier-breakdown-card">
+        <header>
+          <h5>Error breakdown</h5>
+          <span>${errorEntries.length} ${errorEntries.length === 1 ? "error" : "errors"}</span>
+        </header>
+        <ul>${errorItems || "<li><span>No active errors</span><strong>0</strong></li>"}</ul>
+      </section>
+      <section class="supplier-breakdown-card route-breakdown-card">
+        <header>
+          <h5>Route breakdown</h5>
+          <span>${routeEntries.length} ${routeEntries.length === 1 ? "route" : "routes"}</span>
+        </header>
+        <div class="route-breakdown-scroll">
+          <ul>${routeItems || "<li><span>No alerted routes</span><strong>0</strong></li>"}</ul>
+        </div>
+      </section>
+    </div>
+    <section class="supplier-recent">
+      <h5>Active alerts</h5>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Advertised</th><th>Route</th><th>Flight number</th><th>Error</th></tr>
+          </thead>
+          <tbody>${activeAlertRows || '<tr><td colspan="4" class="empty-row">No active alerts match this date range.</td></tr>'}</tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
 function renderSuppliers() {
-  document.querySelector("#supplierGrid").innerHTML = suppliers
+  const rows = filteredSuppliers();
+  const pageRows = paginatedSuppliers(rows);
+  const visibleSelected = rows.find((supplier) => supplier.name === state.suppliers.selectedSupplier);
+  if (!visibleSelected) state.suppliers.selectedSupplier = rows[0]?.name || "";
+
+  renderSupplierSortHeaders();
+  renderSupplierMetrics(rows);
+  renderSupplierPagination(rows);
+
+  if (!pageRows.length) {
+    dom.supplierRows.innerHTML = '<tr><td colspan="6" class="empty-row">No suppliers match the selected filters.</td></tr>';
+    renderSupplierDetail(null);
+    return;
+  }
+
+  dom.supplierRows.innerHTML = pageRows
     .map(
       (supplier) => `
-        <article class="supplier-card">
-          <header>
-            <div>
-              <h4>${supplier.name}</h4>
-              <span class="meta-line">${supplier.trend} alert trend</span>
-            </div>
-          </header>
-          <div class="supplier-stats">
-            <div><span>Active alerts</span><strong>${supplier.activeAlerts}</strong></div>
-            <div><span>Confirmed cases</span><strong>${supplier.confirmedCases}</strong></div>
-            <div><span>Time-shift rate</span><strong>${supplier.shiftRate}</strong></div>
-            <div><span>Support contact rate</span><strong>${supplier.supportRate}</strong></div>
-          </div>
-          <button class="secondary-button supplier-file" type="button" data-supplier="${supplier.name}">Open supplier file</button>
-        </article>
+        <tr class="${supplier.name === state.suppliers.selectedSupplier ? "selected" : ""}" tabindex="0" data-supplier="${supplier.name}">
+          <td>
+            <span class="supplier-title">${supplier.name}</span>
+          </td>
+          <td><strong>${supplier.activeAlerts}</strong></td>
+          <td>${supplier.routes}</td>
+          <td><span class="error-code">${supplier.commonError}</span></td>
+          <td>${formatDateTimeLabel(supplier.latestAlert?.dateIso, supplier.latestAlert?.advertisedTime)}</td>
+          <td>${supplier.activeAlerts ? `${supplier.avgGap} min` : "-"}</td>
+        </tr>
       `
     )
     .join("");
 
-  document.querySelectorAll(".supplier-file").forEach((button) => {
-    button.addEventListener("click", () => showToast(`${button.dataset.supplier} supplier file opened.`));
-  });
+  renderSupplierDetail(rows.find((supplier) => supplier.name === state.suppliers.selectedSupplier));
 }
 
 function renderReports() {
@@ -809,7 +1096,7 @@ function setView(view) {
   state.view = view;
   const titles = {
     alerts: "Suspicious Inventory Alerts",
-    suppliers: "Supplier History Board",
+    suppliers: "Supplier Investigation",
     reports: "Daily Fraud Digest"
   };
 
@@ -893,6 +1180,84 @@ function bindEvents() {
     renderQueue();
   });
 
+  dom.supplierFilterInputs.forEach((input) => {
+    const eventName = input.type === "search" ? "input" : "change";
+    input.addEventListener(eventName, () => {
+      if (input.type === "radio" && !input.checked) return;
+      state.suppliers.filters[input.dataset.supplierFilter] = input.value;
+      resetSupplierPagination();
+      renderSuppliers();
+    });
+  });
+
+  dom.supplierSortButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      if (state.suppliers.sortBy === button.dataset.supplierSort) {
+        state.suppliers.sortDirection = state.suppliers.sortDirection === "asc" ? "desc" : "asc";
+      } else {
+        state.suppliers.sortBy = button.dataset.supplierSort;
+        state.suppliers.sortDirection = button.dataset.supplierSort === "name" ? "asc" : "desc";
+      }
+      resetSupplierPagination();
+      renderSuppliers();
+    });
+  });
+
+  dom.supplierPrevPageButton.addEventListener("click", () => {
+    state.suppliers.currentPage -= 1;
+    renderSuppliers();
+  });
+
+  dom.supplierNextPageButton.addEventListener("click", () => {
+    state.suppliers.currentPage += 1;
+    renderSuppliers();
+  });
+
+  dom.supplierPaginationPages.addEventListener("click", (event) => {
+    const pageButton = event.target.closest("[data-supplier-page]");
+    if (!pageButton) return;
+    state.suppliers.currentPage = Number(pageButton.dataset.supplierPage);
+    renderSuppliers();
+  });
+
+  dom.supplierRows.addEventListener("click", (event) => {
+    const row = event.target.closest("[data-supplier]");
+    if (!row) return;
+    state.suppliers.selectedSupplier = row.dataset.supplier;
+    renderSuppliers();
+  });
+
+  dom.supplierRows.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const row = event.target.closest("[data-supplier]");
+    if (!row) return;
+    event.preventDefault();
+    state.suppliers.selectedSupplier = row.dataset.supplier;
+    renderSuppliers();
+  });
+
+  dom.supplierDetailPanel.addEventListener("change", (event) => {
+    const input = event.target.closest("[data-supplier-detail-date]");
+    if (!input) return;
+    if (input.dataset.supplierDetailDate === "start") {
+      state.suppliers.detailStartDate = input.value;
+    } else {
+      state.suppliers.detailEndDate = input.value;
+    }
+    if (state.suppliers.detailStartDate && state.suppliers.detailEndDate && state.suppliers.detailStartDate > state.suppliers.detailEndDate) {
+      [state.suppliers.detailStartDate, state.suppliers.detailEndDate] = [state.suppliers.detailEndDate, state.suppliers.detailStartDate];
+    }
+    renderSuppliers();
+  });
+
+  dom.supplierDetailPanel.addEventListener("click", (event) => {
+    const clearButton = event.target.closest("[data-clear-supplier-detail-dates]");
+    if (!clearButton) return;
+    state.suppliers.detailStartDate = "";
+    state.suppliers.detailEndDate = "";
+    renderSuppliers();
+  });
+
   document.querySelector("#refreshButton").addEventListener("click", () => {
     showToast("Inventory and license feeds refreshed.");
   });
@@ -938,6 +1303,7 @@ function bindEvents() {
 
 function init() {
   renderFilterOptions();
+  renderSupplierFilterOptions();
   renderCalendar();
   bindEvents();
   renderKpis();

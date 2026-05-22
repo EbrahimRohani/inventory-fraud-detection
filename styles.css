@@ -703,6 +703,11 @@ tbody tr:hover {
   color: var(--amber);
 }
 
+.scope-pill.neutral {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
 .error-code {
   display: block;
   color: var(--red);
@@ -719,55 +724,260 @@ tbody tr:hover {
   overflow: hidden;
 }
 
-.supplier-grid {
+.supplier-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  padding: 18px;
+  border-bottom: 1px solid var(--line);
 }
 
-.supplier-card {
+.supplier-metrics div {
+  min-height: 78px;
+  padding: 16px 18px;
+  border-right: 1px solid var(--line);
+}
+
+.supplier-metrics div:last-child {
+  border-right: 0;
+}
+
+.supplier-metrics span,
+.supplier-detail-stats span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.supplier-metrics strong,
+.supplier-detail-stats strong {
+  display: block;
+  margin-top: 7px;
+  color: var(--ink);
+  font-size: 1.25rem;
+}
+
+.supplier-filters {
   display: grid;
-  gap: 14px;
-  min-height: 210px;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.supplier-card header {
-  display: flex;
-  justify-content: space-between;
+  grid-template-columns: minmax(220px, 1.35fr) repeat(3, minmax(140px, 1fr)) minmax(230px, 1.2fr);
   gap: 12px;
+  padding: 18px;
+  border-bottom: 1px solid var(--line);
 }
 
-.supplier-card h4 {
+.supplier-set-filter {
   margin: 0;
 }
 
-.supplier-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+.supplier-set-filter legend {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-.supplier-stats div {
-  min-height: 62px;
-  padding: 10px;
+.segmented-filter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.segmented-filter label {
+  position: relative;
+}
+
+.segmented-filter input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented-filter span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.segmented-filter input:checked + span {
+  border-color: var(--teal);
+  background: #eaf7f8;
+  color: var(--teal-dark);
+}
+
+.supplier-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+  align-items: stretch;
+}
+
+.supplier-table-panel {
+  min-width: 0;
+  border-right: 1px solid var(--line);
+}
+
+.supplier-table-panel table {
+  min-width: 880px;
+}
+
+.supplier-table-panel tbody tr {
+  cursor: pointer;
+}
+
+.supplier-table-panel tbody tr.selected {
+  background: #eaf7f8;
+  box-shadow: inset 3px 0 0 var(--teal);
+}
+
+.supplier-detail-panel {
+  min-width: 0;
+  padding: 18px;
+  background: #ffffff;
+}
+
+.supplier-detail-heading {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.supplier-detail-heading h4 {
+  margin: 3px 0 0;
+  font-size: 1.1rem;
+}
+
+.supplier-detail-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.supplier-detail-filters label {
+  display: grid;
+  gap: 7px;
+}
+
+.supplier-detail-filters span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.supplier-detail-filters input {
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.supplier-detail-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.supplier-detail-stats div {
+  min-height: 68px;
+  padding: 12px;
+  border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface-2);
 }
 
-.supplier-stats span {
-  display: block;
-  color: var(--muted);
-  font-size: 0.75rem;
+.supplier-detail-stats strong {
+  font-size: 1rem;
 }
 
-.supplier-stats strong {
-  display: block;
-  margin-top: 4px;
+.supplier-breakdowns {
+  display: grid;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.supplier-breakdown-card {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.supplier-breakdown-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.supplier-breakdown-card header span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.supplier-breakdowns h5,
+.supplier-recent h5 {
+  margin: 0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.supplier-breakdowns ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.supplier-breakdowns li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--ink);
+  font-size: 0.88rem;
+}
+
+.supplier-breakdowns li span {
+  color: var(--muted);
+}
+
+.route-breakdown-scroll {
+  max-height: 220px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.supplier-recent {
+  padding-top: 16px;
+}
+
+.supplier-recent h5 {
+  margin-bottom: 10px;
+}
+
+.supplier-recent table {
+  min-width: 620px;
+}
+
+.supplier-recent th,
+.supplier-recent td {
+  padding: 10px;
+  font-size: 0.78rem;
 }
 
 .report-card canvas {
@@ -832,8 +1042,16 @@ tbody tr:hover {
 }
 
 @media (max-width: 1180px) {
-  .supplier-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .supplier-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .supplier-table-panel {
+    border-right: 0;
+  }
+
+  .supplier-detail-panel {
+    border-top: 1px solid var(--line);
   }
 }
 
@@ -866,10 +1084,20 @@ tbody tr:hover {
   }
 
   .kpi-grid,
-  .supplier-grid,
+  .supplier-metrics,
+  .supplier-filters,
   .filter-grid,
   .report-grid {
     grid-template-columns: 1fr;
+  }
+
+  .supplier-metrics div {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .supplier-metrics div:last-child {
+    border-bottom: 0;
   }
 
   .report-card.wide {
@@ -903,6 +1131,11 @@ tbody tr:hover {
 
   .pagination-controls {
     flex-wrap: wrap;
+  }
+
+  .supplier-detail-filters,
+  .supplier-detail-stats {
+    grid-template-columns: 1fr;
   }
 
   .primary-button,

@@ -180,11 +180,76 @@
           <section class="supplier-layout">
             <div class="panel-heading">
               <div>
-                <h3>Supplier history board</h3>
-                <p>Aggregated from confirmed cases, schedule shifts, and active inventory alerts.</p>
+                <h3>Supplier investigation</h3>
+                <p id="supplierSummary">0 suppliers with active alerts</p>
               </div>
             </div>
-            <div class="supplier-grid" id="supplierGrid"></div>
+            <section class="supplier-metrics" aria-label="Supplier evidence summary">
+              <div><span>Active alerts</span><strong id="supplierActiveAlertCount">0</strong></div>
+              <div><span>Active suppliers</span><strong id="supplierActiveCount">0</strong></div>
+              <div><span>Most common error</span><strong id="supplierTopError">-</strong></div>
+            </section>
+            <section class="supplier-filters" aria-label="Supplier filters">
+              <label class="filter-field">
+                <span>Supplier</span>
+                <input id="supplierSearch" type="search" placeholder="Search supplier" data-supplier-filter="search" />
+              </label>
+              <label class="filter-field">
+                <span>Error</span>
+                <select id="supplierErrorFilter" data-supplier-filter="error"></select>
+              </label>
+              <label class="filter-field">
+                <span>Flight type</span>
+                <select id="supplierFlightScopeFilter" data-supplier-filter="flightScope"></select>
+              </label>
+              <label class="filter-field">
+                <span>Trip type</span>
+                <select id="supplierTripTypeFilter" data-supplier-filter="tripType"></select>
+              </label>
+              <fieldset class="filter-field supplier-set-filter">
+                <legend>Supplier set</legend>
+                <div class="segmented-filter">
+                  <label>
+                    <input type="radio" name="supplierVisibility" value="flagged" data-supplier-filter="visibility" checked />
+                    <span>With alerts</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="supplierVisibility" value="all" data-supplier-filter="visibility" />
+                    <span>All suppliers</span>
+                  </label>
+                </div>
+              </fieldset>
+            </section>
+            <div class="supplier-workspace">
+              <div class="supplier-table-panel">
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th><button class="sort-button" type="button" data-supplier-sort="name">Supplier<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                        <th><button class="sort-button" type="button" data-supplier-sort="activeAlerts">Active alerts<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                        <th><button class="sort-button" type="button" data-supplier-sort="routes">Alerted routes<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                        <th><button class="sort-button" type="button" data-supplier-sort="commonError">Common error<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                        <th><button class="sort-button" type="button" data-supplier-sort="latestAlert">Latest advertised<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                        <th><button class="sort-button" type="button" data-supplier-sort="avgGap">Avg gap<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                      </tr>
+                    </thead>
+                    <tbody id="supplierRows"></tbody>
+                  </table>
+                </div>
+                <div class="pagination-bar" aria-label="Supplier pagination">
+                  <p class="pagination-summary" id="supplierPaginationSummary">Showing 0 of 0 suppliers</p>
+                  <div class="pagination-controls">
+                    <button class="pagination-button" id="supplierPrevPageButton" type="button">Previous</button>
+                    <div class="pagination-pages" id="supplierPaginationPages" aria-label="Supplier pages"></div>
+                    <button class="pagination-button" id="supplierNextPageButton" type="button">Next</button>
+                  </div>
+                </div>
+              </div>
+              <aside class="supplier-detail-panel" id="supplierDetailPanel" aria-label="Supplier details">
+                <p class="empty-row">Select a supplier to review active alerts.</p>
+              </aside>
+            </div>
           </section>
         </section>
 
