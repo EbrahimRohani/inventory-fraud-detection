@@ -10,7 +10,7 @@
     <div class="app-shell">
       <aside class="sidebar" aria-label="Main navigation">
         <div class="brand-block">
-          <div class="brand-mark">SF</div>
+          <div class="brand-mark">ST</div>
           <div>
             <p class="eyebrow">Snapptrip</p>
             <h1>Fraud Panel</h1>
@@ -28,7 +28,7 @@
             <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 5h16v4H4V5Zm0 6h7v8H4v-8Zm9 0h7v8h-7v-8Z" /></svg>
             </span>
-            Supplier history
+            Suppliers
           </button>
           <button class="nav-item" type="button" data-view="reports">
             <span class="nav-icon" aria-hidden="true">
@@ -50,7 +50,7 @@
       <main class="workspace">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Domestic flight inventory</p>
+            <p class="eyebrow">Inventory integrity</p>
             <h2 id="viewTitle">Suspicious Inventory Alerts</h2>
           </div>
           <div class="topbar-actions">
@@ -180,7 +180,7 @@
           <section class="supplier-layout">
             <div class="panel-heading">
               <div>
-                <h3>Supplier investigation</h3>
+                <h3>Suppliers</h3>
                 <p id="supplierSummary">0 suppliers with active alerts</p>
               </div>
             </div>
@@ -190,6 +190,29 @@
               <div><span>Most common error</span><strong id="supplierTopError">-</strong></div>
             </section>
             <section class="supplier-filters" aria-label="Supplier filters">
+              <div class="supplier-date-filter">
+                <button class="calendar-button supplier-calendar-button" id="supplierDatePickerButton" type="button" aria-expanded="false" aria-controls="supplierDatePickerPanel">
+                  <span>Active alert date range</span>
+                  <strong id="supplierDatePickerLabel">All active alert dates</strong>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 8H6v10h12V10ZM6 7v1h12V7H6Z" /></svg>
+                </button>
+                <div class="calendar-popover supplier-calendar-popover" id="supplierDatePickerPanel" hidden>
+                  <div class="calendar-heading">
+                    <div class="calendar-nav">
+                      <button class="calendar-nav-button" id="supplierPrevYearButton" type="button" aria-label="Previous year">&lt;&lt;</button>
+                      <button class="calendar-nav-button" id="supplierPrevMonthButton" type="button" aria-label="Previous month">&lt;</button>
+                      <strong id="supplierCalendarMonthLabel">May 2026</strong>
+                      <button class="calendar-nav-button" id="supplierNextMonthButton" type="button" aria-label="Next month">&gt;</button>
+                      <button class="calendar-nav-button" id="supplierNextYearButton" type="button" aria-label="Next year">&gt;&gt;</button>
+                    </div>
+                    <button type="button" id="supplierClearDateFilter">Clear</button>
+                  </div>
+                  <div class="calendar-weekdays" aria-hidden="true">
+                    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                  </div>
+                  <div class="calendar-grid" id="supplierCalendarGrid" role="grid" aria-label="Supplier active alert date range calendar"></div>
+                </div>
+              </div>
               <label class="filter-field">
                 <span>Supplier</span>
                 <input id="supplierSearch" type="search" placeholder="Search supplier" data-supplier-filter="search" />
@@ -206,19 +229,6 @@
                 <span>Trip type</span>
                 <select id="supplierTripTypeFilter" data-supplier-filter="tripType"></select>
               </label>
-              <fieldset class="filter-field supplier-set-filter">
-                <legend>Supplier set</legend>
-                <div class="segmented-filter">
-                  <label>
-                    <input type="radio" name="supplierVisibility" value="flagged" data-supplier-filter="visibility" checked />
-                    <span>With alerts</span>
-                  </label>
-                  <label>
-                    <input type="radio" name="supplierVisibility" value="all" data-supplier-filter="visibility" />
-                    <span>All suppliers</span>
-                  </label>
-                </div>
-              </fieldset>
             </section>
             <div class="supplier-workspace">
               <div class="supplier-table-panel">

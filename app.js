@@ -310,14 +310,14 @@ const state = {
     currentPage: 1,
     pageSize: 25,
     selectedSupplier: "",
-    detailStartDate: "",
-    detailEndDate: "",
+    calendarMonth: alerts[0].dateIso.slice(0, 7),
     filters: {
       search: "",
       error: "",
       flightScope: "",
       tripType: "",
-      visibility: "flagged"
+      advertisedStartDate: "",
+      advertisedEndDate: ""
     }
   }
 };
@@ -346,6 +346,16 @@ const dom = {
   supplierPaginationPages: document.querySelector("#supplierPaginationPages"),
   supplierPrevPageButton: document.querySelector("#supplierPrevPageButton"),
   supplierNextPageButton: document.querySelector("#supplierNextPageButton"),
+  supplierDatePickerButton: document.querySelector("#supplierDatePickerButton"),
+  supplierDatePickerLabel: document.querySelector("#supplierDatePickerLabel"),
+  supplierDatePickerPanel: document.querySelector("#supplierDatePickerPanel"),
+  supplierCalendarMonthLabel: document.querySelector("#supplierCalendarMonthLabel"),
+  supplierCalendarGrid: document.querySelector("#supplierCalendarGrid"),
+  supplierPrevMonthButton: document.querySelector("#supplierPrevMonthButton"),
+  supplierNextMonthButton: document.querySelector("#supplierNextMonthButton"),
+  supplierPrevYearButton: document.querySelector("#supplierPrevYearButton"),
+  supplierNextYearButton: document.querySelector("#supplierNextYearButton"),
+  supplierClearDateFilter: document.querySelector("#supplierClearDateFilter"),
   datePickerButton: document.querySelector("#datePickerButton"),
   datePickerLabel: document.querySelector("#datePickerLabel"),
   datePickerPanel: document.querySelector("#datePickerPanel"),
@@ -518,6 +528,106 @@ function closeCalendar() {
   dom.datePickerButton.setAttribute("aria-expanded", "false");
 }
 
+function supplierDateScopedAlerts() {
+  const { advertisedStartDate, advertisedEndDate } = state.suppliers.filters;
+
+  return alerts.filter((alert) => {
+    const matchesStart = !advertisedStartDate || alert.dateIso >= advertisedStartDate;
+    const matchesEnd = !advertisedEndDate || alert.dateIso <= advertisedEndDate;
+    return matchesStart && matchesEnd;
+  });
+}
+
+function formatSupplierDateRangeLabel() {
+  const { advertisedStartDate, advertisedEndDate } = state.suppliers.filters;
+  if (!advertisedStartDate && !advertisedEndDate) return "All active alert dates";
+  if (advertisedStartDate && !advertisedEndDate) return `From ${formatDateLabel(advertisedStartDate)}`;
+  if (!advertisedStartDate && advertisedEndDate) return `Until ${formatDateLabel(advertisedEndDate)}`;
+  if (advertisedStartDate === advertisedEndDate) return formatDateLabel(advertisedStartDate);
+  return `${formatDateLabel(advertisedStartDate)} - ${formatDateLabel(advertisedEndDate)}`;
+}
+
+function moveSupplierCalendarMonth(delta) {
+  const [year, month] = state.suppliers.calendarMonth.split("-").map(Number);
+  const nextMonth = new Date(year, month - 1 + delta, 1);
+  state.suppliers.calendarMonth = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}`;
+  renderSupplierCalendar();
+}
+
+function moveSupplierCalendarYear(delta) {
+  const [year, month] = state.suppliers.calendarMonth.split("-").map(Number);
+  state.suppliers.calendarMonth = `${year + delta}-${String(month).padStart(2, "0")}`;
+  renderSupplierCalendar();
+}
+
+function selectSupplierAdvertisedDate(dateIso) {
+  const { advertisedStartDate, advertisedEndDate } = state.suppliers.filters;
+
+  if (!advertisedStartDate || advertisedEndDate || dateIso < advertisedStartDate) {
+    state.suppliers.filters.advertisedStartDate = dateIso;
+    state.suppliers.filters.advertisedEndDate = "";
+  } else {
+    state.suppliers.filters.advertisedEndDate = dateIso;
+    closeSupplierCalendar();
+  }
+
+  resetSupplierPagination();
+}
+
+function renderSupplierCalendar() {
+  const [year, month] = state.suppliers.calendarMonth.split("-").map(Number);
+  const monthIndex = month - 1;
+  const firstDay = new Date(year, monthIndex, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const { advertisedStartDate, advertisedEndDate } = state.suppliers.filters;
+
+  dom.supplierCalendarMonthLabel.textContent = new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric"
+  }).format(new Date(year, monthIndex, 1));
+  dom.supplierDatePickerLabel.textContent = formatSupplierDateRangeLabel();
+
+  const blanks = Array.from({ length: firstDay }, () => '<span class="calendar-empty"></span>');
+  const days = Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
+    const dateIso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const hasAlerts = availableDates.has(dateIso);
+    const isStart = advertisedStartDate === dateIso;
+    const isEnd = advertisedEndDate === dateIso;
+    const inRange = advertisedStartDate && advertisedEndDate && dateIso > advertisedStartDate && dateIso < advertisedEndDate;
+    const classes = [
+      hasAlerts ? "has-alerts" : "",
+      isStart ? "range-start" : "",
+      isEnd ? "range-end" : "",
+      inRange ? "in-range" : ""
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return `
+      <button class="${classes}" type="button" data-supplier-date="${dateIso}" aria-pressed="${isStart || isEnd}">
+        ${day}
+      </button>
+    `;
+  });
+
+  dom.supplierCalendarGrid.innerHTML = [...blanks, ...days].join("");
+  dom.supplierCalendarGrid.querySelectorAll("[data-supplier-date]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      selectSupplierAdvertisedDate(button.dataset.supplierDate);
+      renderSupplierFilterOptions();
+      renderSupplierCalendar();
+      renderSuppliers();
+    });
+  });
+}
+
+function closeSupplierCalendar() {
+  dom.supplierDatePickerPanel.hidden = true;
+  dom.supplierDatePickerButton.setAttribute("aria-expanded", "false");
+}
+
 function primaryError(alert) {
   const [code, note] = alert.reasons[0];
   return { code, note };
@@ -681,8 +791,10 @@ function renderQueue() {
             <span class="scope-pill ${alert.flightScope}">${alert.flightScope}</span>
           </td>
           <td>
-            <span class="supplier-title">${alert.supplier}</span>
-            <span class="meta-line">${alert.agency}</span>
+            <button class="supplier-link" type="button" data-queue-supplier="${alert.supplier}">
+              <span class="supplier-title">${alert.supplier}</span>
+              <span class="meta-line">${alert.agency}</span>
+            </button>
           </td>
           <td>
             <span class="error-code">${error.code}</span>
@@ -720,8 +832,10 @@ function supplierNames() {
 }
 
 function supplierRowsData() {
+  const dateScopedAlerts = supplierDateScopedAlerts();
+
   return supplierNames().map((name) => {
-    const supplierAlerts = alerts.filter((alert) => alert.supplier === name);
+    const supplierAlerts = dateScopedAlerts.filter((alert) => alert.supplier === name);
     const routeCounts = countValues(supplierAlerts.map((alert) => cityRoute(alert)));
     const errorCounts = countValues(supplierAlerts.map((alert) => primaryError(alert).code));
     const flightScopeCounts = countValues(supplierAlerts.map((alert) => alert.flightScope));
@@ -752,13 +866,13 @@ function filteredSuppliers() {
 
   return supplierRowsData()
     .filter((supplier) => {
+      const hasFraudErrors = supplier.activeAlerts > 0;
       const matchesSearch = !search || supplier.name.toLowerCase().includes(search);
       const matchesError = !filters.error || Boolean(supplier.errorCounts[filters.error]);
       const matchesFlightScope = !filters.flightScope || Boolean(supplier.flightScopeCounts[filters.flightScope]);
       const matchesTripType = !filters.tripType || Boolean(supplier.tripTypeCounts[filters.tripType]);
-      const matchesVisibility = filters.visibility === "all" || supplier.activeAlerts > 0;
 
-      return matchesSearch && matchesError && matchesFlightScope && matchesTripType && matchesVisibility;
+      return hasFraudErrors && matchesSearch && matchesError && matchesFlightScope && matchesTripType;
     })
     .sort((a, b) => {
       const result = compareSortValues(supplierSortValue(a, state.suppliers.sortBy), supplierSortValue(b, state.suppliers.sortBy));
@@ -777,23 +891,27 @@ function supplierSortValue(supplier, key) {
 }
 
 function renderSupplierFilterOptions() {
+  const dateScopedAlerts = supplierDateScopedAlerts();
+
   state.suppliers.filters.error = fillSelect(
     "supplierErrorFilter",
     "errors",
-    [...new Set(alerts.map((alert) => primaryError(alert).code))].sort((a, b) => collator.compare(a, b)),
+    [...new Set(dateScopedAlerts.map((alert) => primaryError(alert).code))].sort((a, b) => collator.compare(a, b)),
     state.suppliers.filters.error
   );
   state.suppliers.filters.flightScope = fillSelect(
     "supplierFlightScopeFilter",
     "flight types",
-    uniqueValues("flightScope"),
+    [...new Set(dateScopedAlerts.map((alert) => alert.flightScope))].sort((a, b) => collator.compare(a, b)),
     state.suppliers.filters.flightScope
   );
-  state.suppliers.filters.tripType = fillSelect("supplierTripTypeFilter", "trip types", uniqueValues("tripType"), state.suppliers.filters.tripType);
+  state.suppliers.filters.tripType = fillSelect(
+    "supplierTripTypeFilter",
+    "trip types",
+    [...new Set(dateScopedAlerts.map((alert) => alert.tripType))].sort((a, b) => collator.compare(a, b)),
+    state.suppliers.filters.tripType
+  );
   document.querySelector("#supplierSearch").value = state.suppliers.filters.search;
-  document.querySelectorAll("[name='supplierVisibility']").forEach((input) => {
-    input.checked = input.value === state.suppliers.filters.visibility;
-  });
 }
 
 function renderSupplierSortHeaders() {
@@ -879,13 +997,7 @@ function renderSupplierMetrics(rows) {
 }
 
 function supplierDetailAlerts(supplier) {
-  return [...supplier.alerts]
-    .filter((alert) => {
-      const matchesStart = !state.suppliers.detailStartDate || alert.dateIso >= state.suppliers.detailStartDate;
-      const matchesEnd = !state.suppliers.detailEndDate || alert.dateIso <= state.suppliers.detailEndDate;
-      return matchesStart && matchesEnd;
-    })
-    .sort((a, b) => collator.compare(`${b.dateIso} ${b.advertisedTime}`, `${a.dateIso} ${a.advertisedTime}`));
+  return [...supplier.alerts].sort((a, b) => collator.compare(`${b.dateIso} ${b.advertisedTime}`, `${a.dateIso} ${a.advertisedTime}`));
 }
 
 function renderSupplierDetail(supplier) {
@@ -928,17 +1040,6 @@ function renderSupplierDetail(supplier) {
       <div>
         <h4>${supplier.name}</h4>
       </div>
-    </div>
-    <div class="supplier-detail-filters" aria-label="Supplier active alert date range">
-      <label>
-        <span>From</span>
-        <input type="date" value="${state.suppliers.detailStartDate}" data-supplier-detail-date="start" />
-      </label>
-      <label>
-        <span>To</span>
-        <input type="date" value="${state.suppliers.detailEndDate}" data-supplier-detail-date="end" />
-      </label>
-      <button class="secondary-button" type="button" data-clear-supplier-detail-dates>Clear</button>
     </div>
     <div class="supplier-detail-stats">
       <div><span>Active alerts</span><strong>${detailAlerts.length}</strong></div>
@@ -987,6 +1088,7 @@ function renderSuppliers() {
   renderSupplierSortHeaders();
   renderSupplierMetrics(rows);
   renderSupplierPagination(rows);
+  const selectedSupplier = rows.find((supplier) => supplier.name === state.suppliers.selectedSupplier);
 
   if (!pageRows.length) {
     dom.supplierRows.innerHTML = '<tr><td colspan="6" class="empty-row">No suppliers match the selected filters.</td></tr>';
@@ -1011,7 +1113,26 @@ function renderSuppliers() {
     )
     .join("");
 
-  renderSupplierDetail(rows.find((supplier) => supplier.name === state.suppliers.selectedSupplier));
+  renderSupplierDetail(selectedSupplier);
+}
+
+function openSupplierFromQueue(supplierName) {
+  state.suppliers.selectedSupplier = supplierName;
+  state.suppliers.sortBy = "activeAlerts";
+  state.suppliers.sortDirection = "desc";
+  state.suppliers.filters.search = "";
+  state.suppliers.filters.error = "";
+  state.suppliers.filters.flightScope = "";
+  state.suppliers.filters.tripType = "";
+  state.suppliers.filters.advertisedStartDate = "";
+  state.suppliers.filters.advertisedEndDate = "";
+  renderSupplierFilterOptions();
+  renderSupplierCalendar();
+
+  const rows = filteredSuppliers();
+  const supplierIndex = rows.findIndex((supplier) => supplier.name === supplierName);
+  state.suppliers.currentPage = supplierIndex >= 0 ? Math.floor(supplierIndex / state.suppliers.pageSize) + 1 : 1;
+  setView("suppliers");
 }
 
 function renderReports() {
@@ -1046,7 +1167,7 @@ function drawBarChart(canvas, values, labels, color) {
   const width = canvas.width;
   const height = canvas.height;
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = "#fafafa";
   ctx.fillRect(0, 0, width, height);
 
   const max = Math.max(...values, 1);
@@ -1054,7 +1175,7 @@ function drawBarChart(canvas, values, labels, color) {
   const barGap = 18;
   const barWidth = (width - padding * 2 - barGap * (values.length - 1)) / values.length;
 
-  ctx.strokeStyle = "#dbe3e7";
+  ctx.strokeStyle = "#e4e4e7";
   ctx.lineWidth = 1;
   for (let i = 0; i < 4; i += 1) {
     const y = padding + i * ((height - padding * 2) / 3);
@@ -1070,10 +1191,10 @@ function drawBarChart(canvas, values, labels, color) {
     const y = height - padding - barHeight;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, barWidth, barHeight);
-    ctx.fillStyle = "#172026";
+    ctx.fillStyle = "#18181b";
     ctx.font = "700 14px Inter, sans-serif";
     ctx.fillText(String(value), x + 4, y - 8);
-    ctx.fillStyle = "#64727b";
+    ctx.fillStyle = "#71717a";
     ctx.font = "12px Inter, sans-serif";
     ctx.fillText(labels[index], x, height - 12);
   });
@@ -1082,7 +1203,7 @@ function drawBarChart(canvas, values, labels, color) {
 function drawTrendChart() {
   const canvas = document.querySelector("#trendChart");
   if (!canvas) return;
-  drawBarChart(canvas, [12, 18, 21, 16, 26, 31, 29], ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"], "#c26a14");
+  drawBarChart(canvas, [12, 18, 21, 16, 26, 31, 29], ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"], "#0891b2");
 }
 
 function showToast(message) {
@@ -1096,7 +1217,7 @@ function setView(view) {
   state.view = view;
   const titles = {
     alerts: "Suspicious Inventory Alerts",
-    suppliers: "Supplier Investigation",
+    suppliers: "Suppliers",
     reports: "Daily Fraud Digest"
   };
 
@@ -1180,6 +1301,12 @@ function bindEvents() {
     renderQueue();
   });
 
+  dom.alertRows.addEventListener("click", (event) => {
+    const supplierButton = event.target.closest("[data-queue-supplier]");
+    if (!supplierButton) return;
+    openSupplierFromQueue(supplierButton.dataset.queueSupplier);
+  });
+
   dom.supplierFilterInputs.forEach((input) => {
     const eventName = input.type === "search" ? "input" : "change";
     input.addEventListener(eventName, () => {
@@ -1220,6 +1347,32 @@ function bindEvents() {
     renderSuppliers();
   });
 
+  dom.supplierDatePickerButton.addEventListener("click", () => {
+    const isOpen = !dom.supplierDatePickerPanel.hidden;
+    dom.supplierDatePickerPanel.hidden = isOpen;
+    dom.supplierDatePickerButton.setAttribute("aria-expanded", String(!isOpen));
+  });
+
+  dom.supplierClearDateFilter.addEventListener("click", () => {
+    state.suppliers.filters.advertisedStartDate = "";
+    state.suppliers.filters.advertisedEndDate = "";
+    resetSupplierPagination();
+    closeSupplierCalendar();
+    renderSupplierFilterOptions();
+    renderSupplierCalendar();
+    renderSuppliers();
+  });
+
+  dom.supplierPrevMonthButton.addEventListener("click", () => moveSupplierCalendarMonth(-1));
+  dom.supplierNextMonthButton.addEventListener("click", () => moveSupplierCalendarMonth(1));
+  dom.supplierPrevYearButton.addEventListener("click", () => moveSupplierCalendarYear(-1));
+  dom.supplierNextYearButton.addEventListener("click", () => moveSupplierCalendarYear(1));
+
+  document.addEventListener("click", (event) => {
+    if (dom.supplierDatePickerPanel.hidden) return;
+    if (!event.target.closest(".supplier-date-filter")) closeSupplierCalendar();
+  });
+
   dom.supplierRows.addEventListener("click", (event) => {
     const row = event.target.closest("[data-supplier]");
     if (!row) return;
@@ -1233,28 +1386,6 @@ function bindEvents() {
     if (!row) return;
     event.preventDefault();
     state.suppliers.selectedSupplier = row.dataset.supplier;
-    renderSuppliers();
-  });
-
-  dom.supplierDetailPanel.addEventListener("change", (event) => {
-    const input = event.target.closest("[data-supplier-detail-date]");
-    if (!input) return;
-    if (input.dataset.supplierDetailDate === "start") {
-      state.suppliers.detailStartDate = input.value;
-    } else {
-      state.suppliers.detailEndDate = input.value;
-    }
-    if (state.suppliers.detailStartDate && state.suppliers.detailEndDate && state.suppliers.detailStartDate > state.suppliers.detailEndDate) {
-      [state.suppliers.detailStartDate, state.suppliers.detailEndDate] = [state.suppliers.detailEndDate, state.suppliers.detailStartDate];
-    }
-    renderSuppliers();
-  });
-
-  dom.supplierDetailPanel.addEventListener("click", (event) => {
-    const clearButton = event.target.closest("[data-clear-supplier-detail-dates]");
-    if (!clearButton) return;
-    state.suppliers.detailStartDate = "";
-    state.suppliers.detailEndDate = "";
     renderSuppliers();
   });
 
@@ -1305,6 +1436,7 @@ function init() {
   renderFilterOptions();
   renderSupplierFilterOptions();
   renderCalendar();
+  renderSupplierCalendar();
   bindEvents();
   renderKpis();
   renderQueue();
