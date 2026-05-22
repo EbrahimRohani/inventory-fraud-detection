@@ -81,19 +81,25 @@
           <section class="control-strip" aria-label="Queue filters">
             <div class="calendar-filter">
               <button class="calendar-button" id="datePickerButton" type="button" aria-expanded="false" aria-controls="datePickerPanel">
-                <span>Alert date</span>
-                <strong id="datePickerLabel">All dates</strong>
+                <span>Advertised date</span>
+                <strong id="datePickerLabel">All advertised dates</strong>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 8H6v10h12V10ZM6 7v1h12V7H6Z" /></svg>
               </button>
               <div class="calendar-popover" id="datePickerPanel" hidden>
                 <div class="calendar-heading">
-                  <strong id="calendarMonthLabel">May 2026</strong>
+                  <div class="calendar-nav">
+                    <button class="calendar-nav-button" id="prevYearButton" type="button" aria-label="Previous year">&lt;&lt;</button>
+                    <button class="calendar-nav-button" id="prevMonthButton" type="button" aria-label="Previous month">&lt;</button>
+                    <strong id="calendarMonthLabel">May 2026</strong>
+                    <button class="calendar-nav-button" id="nextMonthButton" type="button" aria-label="Next month">&gt;</button>
+                    <button class="calendar-nav-button" id="nextYearButton" type="button" aria-label="Next year">&gt;&gt;</button>
+                  </div>
                   <button id="clearDateFilter" type="button">Clear</button>
                 </div>
                 <div class="calendar-weekdays" aria-hidden="true">
                   <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
                 </div>
-                <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="Alert date calendar"></div>
+                <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="Advertised date range calendar"></div>
               </div>
             </div>
             <label class="tolerance-filter">
@@ -123,6 +129,14 @@
               <span>Trip type</span>
               <select id="tripTypeFilter" data-filter="tripType"></select>
             </label>
+            <label class="filter-field">
+              <span>Flight type</span>
+              <select id="flightScopeFilter" data-filter="flightScope"></select>
+            </label>
+            <label class="filter-field">
+              <span>Error</span>
+              <select id="errorFilter" data-filter="error"></select>
+            </label>
           </section>
 
           <div class="content-grid table-only">
@@ -132,29 +146,30 @@
                   <h3>Alert queue</h3>
                   <p id="queueSummary">0 active alerts</p>
                 </div>
-                <select id="sortSelect" aria-label="Sort alerts">
-                  <option value="inventory">Sort by inventory</option>
-                  <option value="advertised">Sort by advertised</option>
-                  <option value="license">Sort by license</option>
-                  <option value="tripType">Sort by trip type</option>
-                  <option value="supplier">Sort by supplier</option>
-                  <option value="error">Sort by error</option>
-                </select>
               </div>
               <div class="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>Inventory</th>
-                      <th>Advertised</th>
-                      <th>License</th>
-                      <th>Trip type</th>
-                      <th>Supplier</th>
-                      <th>Error</th>
+                      <th><button class="sort-button" type="button" data-sort="inventory">Inventory<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                      <th><button class="sort-button" type="button" data-sort="advertised">Advertised<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                      <th><button class="sort-button" type="button" data-sort="license">License<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                      <th><button class="sort-button" type="button" data-sort="tripType">Trip type<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                      <th><button class="sort-button" type="button" data-sort="flightScope">Flight type<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                      <th><button class="sort-button" type="button" data-sort="supplier">Supplier<span class="sort-arrow" aria-hidden="true"></span></button></th>
+                      <th><button class="sort-button" type="button" data-sort="error">Error<span class="sort-arrow" aria-hidden="true"></span></button></th>
                     </tr>
                   </thead>
                   <tbody id="alertRows"></tbody>
                 </table>
+              </div>
+              <div class="pagination-bar" aria-label="Alert queue pagination">
+                <p class="pagination-summary" id="paginationSummary">Showing 0 of 0 alerts</p>
+                <div class="pagination-controls">
+                  <button class="pagination-button" id="prevPageButton" type="button">Previous</button>
+                  <div class="pagination-pages" id="paginationPages" aria-label="Pages"></div>
+                  <button class="pagination-button" id="nextPageButton" type="button">Next</button>
+                </div>
               </div>
             </section>
 

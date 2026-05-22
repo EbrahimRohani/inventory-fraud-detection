@@ -16,6 +16,7 @@ const alerts = [
     advertisedTime: "08:00",
     licensedTime: "10:00",
     tripType: "Oneway",
+    flightScope: "Domestic",
     supplier: "Aseman Charter Co.",
     agency: "Agency 1187",
     createdMinutesAgo: 34,
@@ -50,6 +51,7 @@ const alerts = [
     advertisedTime: "12:00",
     licensedTime: "10:00",
     tripType: "Roundtrip",
+    flightScope: "Domestic",
     supplier: "Aseman Charter Co.",
     agency: "Agency 1187",
     createdMinutesAgo: 39,
@@ -84,6 +86,7 @@ const alerts = [
     advertisedTime: "15:45",
     licensedTime: "17:05",
     tripType: "Oneway",
+    flightScope: "Domestic",
     supplier: "Pars Sky Supply",
     agency: "Agency 2044",
     createdMinutesAgo: 66,
@@ -118,6 +121,7 @@ const alerts = [
     advertisedTime: "06:20",
     licensedTime: "08:00",
     tripType: "Roundtrip",
+    flightScope: "Domestic",
     supplier: "Mehr Air Desk",
     agency: "Agency 3310",
     createdMinutesAgo: 92,
@@ -150,6 +154,7 @@ const alerts = [
     advertisedTime: "19:10",
     licensedTime: "19:30",
     tripType: "Oneway",
+    flightScope: "Domestic",
     supplier: "Shomal Ticket Hub",
     agency: "Agency 1710",
     createdMinutesAgo: 18,
@@ -183,6 +188,7 @@ const alerts = [
     advertisedTime: "11:30",
     licensedTime: "13:00",
     tripType: "Roundtrip",
+    flightScope: "Domestic",
     supplier: "Kavir Charter",
     agency: "Agency 0920",
     createdMinutesAgo: 128,
@@ -217,6 +223,7 @@ const alerts = [
     advertisedTime: "04:15",
     licensedTime: "05:00",
     tripType: "Roundtrip",
+    flightScope: "International",
     supplier: "Global Charter Desk",
     agency: "Agency 4401",
     createdMinutesAgo: 44,
@@ -249,6 +256,7 @@ const alerts = [
     advertisedTime: "13:40",
     licensedTime: "15:10",
     tripType: "Oneway",
+    flightScope: "International",
     supplier: "Anatolia Seat Hub",
     agency: "Agency 4401",
     createdMinutesAgo: 52,
@@ -312,14 +320,20 @@ const suppliers = [
 const state = {
   view: "alerts",
   sortBy: "advertised",
+  sortDirection: "asc",
+  currentPage: 1,
+  pageSize: 25,
   calendarMonth: alerts[0].dateIso.slice(0, 7),
   filters: {
-    date: "",
+    advertisedStartDate: "",
+    advertisedEndDate: "",
     originCity: "",
     originAirport: "",
     destinationCity: "",
     destinationAirport: "",
     tripType: "",
+    flightScope: "",
+    error: "",
     exactTolerance: "15"
   }
 };
@@ -329,14 +343,22 @@ const dom = {
   views: document.querySelectorAll(".view"),
   navItems: document.querySelectorAll(".nav-item"),
   filterInputs: document.querySelectorAll("[data-filter]"),
-  sortSelect: document.querySelector("#sortSelect"),
+  sortButtons: document.querySelectorAll("[data-sort]"),
   alertRows: document.querySelector("#alertRows"),
   queueSummary: document.querySelector("#queueSummary"),
+  paginationSummary: document.querySelector("#paginationSummary"),
+  paginationPages: document.querySelector("#paginationPages"),
+  prevPageButton: document.querySelector("#prevPageButton"),
+  nextPageButton: document.querySelector("#nextPageButton"),
   datePickerButton: document.querySelector("#datePickerButton"),
   datePickerLabel: document.querySelector("#datePickerLabel"),
   datePickerPanel: document.querySelector("#datePickerPanel"),
   calendarMonthLabel: document.querySelector("#calendarMonthLabel"),
   calendarGrid: document.querySelector("#calendarGrid"),
+  prevMonthButton: document.querySelector("#prevMonthButton"),
+  nextMonthButton: document.querySelector("#nextMonthButton"),
+  prevYearButton: document.querySelector("#prevYearButton"),
+  nextYearButton: document.querySelector("#nextYearButton"),
   clearDateFilter: document.querySelector("#clearDateFilter"),
   toast: document.querySelector("#toast")
 };
@@ -397,6 +419,8 @@ function renderFilterOptions() {
     state.filters.destinationAirport
   );
   state.filters.tripType = fillSelect("tripTypeFilter", "trip types", uniqueValues("tripType"), state.filters.tripType);
+  state.filters.flightScope = fillSelect("flightScopeFilter", "flight types", uniqueValues("flightScope"), state.filters.flightScope);
+  state.filters.error = fillSelect("errorFilter", "errors", [...new Set(alerts.map((alert) => primaryError(alert).code))].sort((a, b) => collator.compare(a, b)), state.filters.error);
 }
 
 function formatDateLabel(dateIso) {
@@ -409,26 +433,74 @@ function formatDateLabel(dateIso) {
   }).format(new Date(year, month - 1, day));
 }
 
+function formatDateRangeLabel() {
+  const { advertisedStartDate, advertisedEndDate } = state.filters;
+  if (!advertisedStartDate && !advertisedEndDate) return "All advertised dates";
+  if (advertisedStartDate && !advertisedEndDate) return `From ${formatDateLabel(advertisedStartDate)}`;
+  if (!advertisedStartDate && advertisedEndDate) return `Until ${formatDateLabel(advertisedEndDate)}`;
+  if (advertisedStartDate === advertisedEndDate) return formatDateLabel(advertisedStartDate);
+  return `${formatDateLabel(advertisedStartDate)} - ${formatDateLabel(advertisedEndDate)}`;
+}
+
+function moveCalendarMonth(delta) {
+  const [year, month] = state.calendarMonth.split("-").map(Number);
+  const nextMonth = new Date(year, month - 1 + delta, 1);
+  state.calendarMonth = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}`;
+  renderCalendar();
+}
+
+function moveCalendarYear(delta) {
+  const [year, month] = state.calendarMonth.split("-").map(Number);
+  state.calendarMonth = `${year + delta}-${String(month).padStart(2, "0")}`;
+  renderCalendar();
+}
+
+function selectAdvertisedDate(dateIso) {
+  const { advertisedStartDate, advertisedEndDate } = state.filters;
+
+  if (!advertisedStartDate || advertisedEndDate || dateIso < advertisedStartDate) {
+    state.filters.advertisedStartDate = dateIso;
+    state.filters.advertisedEndDate = "";
+  } else {
+    state.filters.advertisedEndDate = dateIso;
+    closeCalendar();
+  }
+
+  resetPagination();
+}
+
 function renderCalendar() {
   const [year, month] = state.calendarMonth.split("-").map(Number);
   const monthIndex = month - 1;
   const firstDay = new Date(year, monthIndex, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
+  const { advertisedStartDate, advertisedEndDate } = state.filters;
 
   dom.calendarMonthLabel.textContent = new Intl.DateTimeFormat("en", {
     month: "long",
     year: "numeric"
   }).format(new Date(year, monthIndex, 1));
-  dom.datePickerLabel.textContent = formatDateLabel(state.filters.date);
+  dom.datePickerLabel.textContent = formatDateRangeLabel();
 
   const blanks = Array.from({ length: firstDay }, () => '<span class="calendar-empty"></span>');
   const days = Array.from({ length: daysInMonth }, (_, index) => {
     const day = index + 1;
     const dateIso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const hasAlerts = availableDates.has(dateIso);
-    const active = state.filters.date === dateIso;
+    const isStart = advertisedStartDate === dateIso;
+    const isEnd = advertisedEndDate === dateIso;
+    const inRange = advertisedStartDate && advertisedEndDate && dateIso > advertisedStartDate && dateIso < advertisedEndDate;
+    const classes = [
+      hasAlerts ? "has-alerts" : "",
+      isStart ? "range-start" : "",
+      isEnd ? "range-end" : "",
+      inRange ? "in-range" : ""
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     return `
-      <button class="${active ? "active" : ""}" type="button" data-date="${dateIso}" ${hasAlerts ? "" : "disabled"}>
+      <button class="${classes}" type="button" data-date="${dateIso}" aria-pressed="${isStart || isEnd}">
         ${day}
       </button>
     `;
@@ -436,9 +508,9 @@ function renderCalendar() {
 
   dom.calendarGrid.innerHTML = [...blanks, ...days].join("");
   dom.calendarGrid.querySelectorAll("[data-date]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.filters.date = button.dataset.date;
-      closeCalendar();
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      selectAdvertisedDate(button.dataset.date);
       renderCalendar();
       renderQueue();
     });
@@ -455,37 +527,121 @@ function primaryError(alert) {
   return { code, note };
 }
 
+function sortValue(alert, key) {
+  if (key === "inventory") return `${cityRoute(alert)} ${airportRoute(alert)} ${alert.inventoryId}`;
+  if (key === "advertised") return `${alert.dateIso} ${alert.advertisedTime}`;
+  if (key === "license") return timeToMinutes(alert.licensedTime);
+  if (key === "tripType") return alert.tripType;
+  if (key === "flightScope") return alert.flightScope;
+  if (key === "supplier") return alert.supplier;
+  if (key === "error") return primaryError(alert).code;
+  return "";
+}
+
+function compareSortValues(a, b) {
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  return collator.compare(String(a), String(b));
+}
+
+function renderSortHeaders() {
+  dom.sortButtons.forEach((button) => {
+    const isActive = button.dataset.sort === state.sortBy;
+    button.classList.toggle("active", isActive);
+    button.classList.toggle("descending", isActive && state.sortDirection === "desc");
+    button.setAttribute("aria-sort", isActive ? (state.sortDirection === "asc" ? "ascending" : "descending") : "none");
+  });
+}
+
+function resetPagination() {
+  state.currentPage = 1;
+}
+
 function filteredAlerts() {
   const tolerance = Number(state.filters.exactTolerance);
 
   return alerts
     .filter((alert) => {
-      const matchesDate = !state.filters.date || alert.dateIso === state.filters.date;
+      const matchesDateRange =
+        (!state.filters.advertisedStartDate || alert.dateIso >= state.filters.advertisedStartDate) &&
+        (!state.filters.advertisedEndDate || alert.dateIso <= state.filters.advertisedEndDate);
       const matchesOriginCity = !state.filters.originCity || alert.originCity === state.filters.originCity;
       const matchesOriginAirport = !state.filters.originAirport || alert.originAirport === state.filters.originAirport;
       const matchesDestinationCity = !state.filters.destinationCity || alert.destinationCity === state.filters.destinationCity;
       const matchesDestinationAirport = !state.filters.destinationAirport || alert.destinationAirport === state.filters.destinationAirport;
       const matchesTripType = !state.filters.tripType || alert.tripType === state.filters.tripType;
+      const matchesFlightScope = !state.filters.flightScope || alert.flightScope === state.filters.flightScope;
+      const matchesError = !state.filters.error || primaryError(alert).code === state.filters.error;
       const outsideTolerance = licenseGapMinutes(alert) > tolerance;
 
       return (
-        matchesDate &&
+        matchesDateRange &&
         matchesOriginCity &&
         matchesOriginAirport &&
         matchesDestinationCity &&
         matchesDestinationAirport &&
         matchesTripType &&
+        matchesFlightScope &&
+        matchesError &&
         outsideTolerance
       );
     })
     .sort((a, b) => {
-      if (state.sortBy === "inventory") return collator.compare(`${cityRoute(a)} ${airportRoute(a)} ${a.inventoryId}`, `${cityRoute(b)} ${airportRoute(b)} ${b.inventoryId}`);
-      if (state.sortBy === "license") return timeToMinutes(a.licensedTime) - timeToMinutes(b.licensedTime);
-      if (state.sortBy === "tripType") return collator.compare(a.tripType, b.tripType);
-      if (state.sortBy === "supplier") return collator.compare(a.supplier, b.supplier);
-      if (state.sortBy === "error") return collator.compare(primaryError(a).code, primaryError(b).code);
-      return `${a.dateIso} ${a.advertisedTime}`.localeCompare(`${b.dateIso} ${b.advertisedTime}`);
+      const result = compareSortValues(sortValue(a, state.sortBy), sortValue(b, state.sortBy));
+      return state.sortDirection === "asc" ? result : -result;
     });
+}
+
+function totalPagesFor(rows) {
+  return Math.max(1, Math.ceil(rows.length / state.pageSize));
+}
+
+function clampCurrentPage(rows) {
+  const totalPages = totalPagesFor(rows);
+  state.currentPage = Math.min(Math.max(state.currentPage, 1), totalPages);
+  return totalPages;
+}
+
+function paginatedAlerts(rows) {
+  clampCurrentPage(rows);
+  const start = (state.currentPage - 1) * state.pageSize;
+  return rows.slice(start, start + state.pageSize);
+}
+
+function paginationButton(pageNumber) {
+  const active = pageNumber === state.currentPage;
+  return `
+    <button class="page-button ${active ? "active" : ""}" type="button" data-page="${pageNumber}" ${active ? 'aria-current="page"' : ""}>
+      ${pageNumber}
+    </button>
+  `;
+}
+
+function renderPagination(rows) {
+  const totalRows = rows.length;
+  const totalPages = clampCurrentPage(rows);
+  const startRow = totalRows ? (state.currentPage - 1) * state.pageSize + 1 : 0;
+  const endRow = Math.min(state.currentPage * state.pageSize, totalRows);
+
+  dom.paginationSummary.textContent = totalRows
+    ? `Showing ${startRow}-${endRow} of ${totalRows} ${totalRows === 1 ? "alert" : "alerts"}`
+    : "Showing 0 of 0 alerts";
+  dom.prevPageButton.disabled = state.currentPage === 1;
+  dom.nextPageButton.disabled = state.currentPage === totalPages;
+
+  const pages = [];
+  if (totalPages <= 7) {
+    for (let page = 1; page <= totalPages; page += 1) pages.push(paginationButton(page));
+  } else {
+    const middleStart = Math.max(2, state.currentPage - 1);
+    const middleEnd = Math.min(totalPages - 1, state.currentPage + 1);
+    pages.push(paginationButton(1));
+    if (middleStart > 2) pages.push('<span class="page-ellipsis">...</span>');
+    for (let page = middleStart; page <= middleEnd; page += 1) pages.push(paginationButton(page));
+    if (middleEnd < totalPages - 1) pages.push('<span class="page-ellipsis">...</span>');
+    pages.push(paginationButton(totalPages));
+  }
+
+  dom.paginationPages.innerHTML = pages.join("");
 }
 
 function renderKpis() {
@@ -495,14 +651,17 @@ function renderKpis() {
 
 function renderQueue() {
   const rows = filteredAlerts();
+  const pageRows = paginatedAlerts(rows);
+  renderSortHeaders();
+  renderPagination(rows);
   dom.queueSummary.textContent = `${rows.length} matching ${rows.length === 1 ? "alert" : "alerts"}`;
 
-  if (!rows.length) {
-    dom.alertRows.innerHTML = '<tr><td colspan="6" class="empty-row">No alerts match the selected filters.</td></tr>';
+  if (!pageRows.length) {
+    dom.alertRows.innerHTML = '<tr><td colspan="7" class="empty-row">No alerts match the selected filters.</td></tr>';
     return;
   }
 
-  dom.alertRows.innerHTML = rows
+  dom.alertRows.innerHTML = pageRows
     .map(
       (alert) => {
         const error = primaryError(alert);
@@ -521,6 +680,9 @@ function renderQueue() {
           </td>
           <td>
             <span class="trip-pill">${alert.tripType}</span>
+          </td>
+          <td>
+            <span class="scope-pill ${alert.flightScope}">${alert.flightScope}</span>
           </td>
           <td>
             <span class="supplier-title">${alert.supplier}</span>
@@ -669,11 +831,18 @@ function bindEvents() {
   });
 
   dom.clearDateFilter.addEventListener("click", () => {
-    state.filters.date = "";
+    state.filters.advertisedStartDate = "";
+    state.filters.advertisedEndDate = "";
+    resetPagination();
     closeCalendar();
     renderCalendar();
     renderQueue();
   });
+
+  dom.prevMonthButton.addEventListener("click", () => moveCalendarMonth(-1));
+  dom.nextMonthButton.addEventListener("click", () => moveCalendarMonth(1));
+  dom.prevYearButton.addEventListener("click", () => moveCalendarYear(-1));
+  dom.nextYearButton.addEventListener("click", () => moveCalendarYear(1));
 
   document.addEventListener("click", (event) => {
     if (dom.datePickerPanel.hidden) return;
@@ -683,6 +852,7 @@ function bindEvents() {
   dom.filterInputs.forEach((input) => {
     input.addEventListener("input", () => {
       state.filters[input.dataset.filter] = input.value;
+      resetPagination();
       if (input.id === "exactTolerance") {
         document.querySelector("#exactToleranceValue").textContent = `${input.value} min`;
       }
@@ -693,8 +863,33 @@ function bindEvents() {
     });
   });
 
-  dom.sortSelect.addEventListener("change", (event) => {
-    state.sortBy = event.target.value;
+  dom.sortButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      if (state.sortBy === button.dataset.sort) {
+        state.sortDirection = state.sortDirection === "asc" ? "desc" : "asc";
+      } else {
+        state.sortBy = button.dataset.sort;
+        state.sortDirection = "asc";
+      }
+      resetPagination();
+      renderQueue();
+    });
+  });
+
+  dom.prevPageButton.addEventListener("click", () => {
+    state.currentPage -= 1;
+    renderQueue();
+  });
+
+  dom.nextPageButton.addEventListener("click", () => {
+    state.currentPage += 1;
+    renderQueue();
+  });
+
+  dom.paginationPages.addEventListener("click", (event) => {
+    const pageButton = event.target.closest("[data-page]");
+    if (!pageButton) return;
+    state.currentPage = Number(pageButton.dataset.page);
     renderQueue();
   });
 
@@ -704,7 +899,7 @@ function bindEvents() {
 
   document.querySelector("#exportButton").addEventListener("click", () => {
     const csvRows = [
-      ["Alert ID", "Inventory ID", "Origin City", "Origin Airport", "Destination City", "Destination Airport", "City Route", "Airport Route", "Airline", "Flight No", "Date", "Advertised Time", "License Time", "Trip Type", "Supplier", "Error Code", "Error Note"],
+      ["Alert ID", "Inventory ID", "Origin City", "Origin Airport", "Destination City", "Destination Airport", "City Route", "Airport Route", "Airline", "Flight No", "Date", "Advertised Time", "License Time", "Trip Type", "Flight Type", "Supplier", "Error Code", "Error Note"],
       ...filteredAlerts().map((alert) => {
         const error = primaryError(alert);
         return [
@@ -722,6 +917,7 @@ function bindEvents() {
           alert.advertisedTime,
           alert.licensedTime,
           alert.tripType,
+          alert.flightScope,
           alert.supplier,
           error.code,
           error.note
