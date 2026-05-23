@@ -1,6 +1,6 @@
-# Inventory Fraud Detection Frontend
+# Inventory Detection
 
-Static frontend prototype for Snapptrip's flight inventory fraud detection panel.
+Static frontend prototype for Snapptrip's inventory detection panel.
 
 ## Run
 

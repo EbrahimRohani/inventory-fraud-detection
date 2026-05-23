@@ -1,8 +1,8 @@
 {
-  "name": "inventory-fraud-detection-panel",
+  "name": "inventory-detection-panel",
   "version": "1.0.0",
   "private": true,
-  "description": "Frontend panel prototype for detecting fake flight inventory.",
+  "description": "Frontend panel prototype for inventory detection.",
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js"

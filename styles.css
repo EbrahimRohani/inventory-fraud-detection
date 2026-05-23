@@ -141,9 +141,9 @@ svg {
 }
 
 .topbar h2 {
-  font-size: 1.42rem;
+  font-size: 1.3rem;
   font-weight: 850;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .nav-list {
@@ -348,7 +348,7 @@ svg {
 .metric-card strong {
   display: block;
   margin: 6px 0 4px;
-  font-size: 2.1rem;
+  font-size: 1.72rem;
   font-weight: 850;
   line-height: 1;
 }
@@ -365,6 +365,7 @@ svg {
   display: grid;
   gap: 7px;
   align-items: center;
+  min-width: 0;
   min-height: 58px;
   padding: 9px 12px;
   border: 1px solid var(--line);
@@ -393,6 +394,7 @@ svg {
   grid-template-columns: 1fr auto;
   gap: 4px 10px;
   align-items: center;
+  min-width: 0;
   width: 100%;
   min-height: 60px;
   padding: 10px 12px;
@@ -411,7 +413,16 @@ svg {
 }
 
 .calendar-button strong {
-  font-size: 0.96rem;
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+
+.calendar-button span,
+.calendar-button strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .calendar-button:hover {
@@ -546,12 +557,20 @@ svg {
 
 .filter-field input,
 .filter-field select {
+  display: block;
+  width: 100%;
   min-width: 0;
+  max-width: 100%;
   border: 0;
   outline: 0;
   background: transparent;
   color: var(--ink);
+  overflow: hidden;
+  font-size: 0.9rem;
   font-weight: 650;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .filter-field select,
@@ -585,7 +604,7 @@ svg {
 
 .filter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
@@ -650,8 +669,9 @@ table {
 
 th,
 td {
-  padding: 13px 16px;
+  padding: 12px 15px;
   border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
   text-align: left;
   vertical-align: middle;
 }
@@ -662,7 +682,7 @@ th {
   z-index: 1;
   background: var(--surface-3);
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 850;
   text-transform: uppercase;
 }
@@ -779,7 +799,9 @@ tbody tr:hover {
 .supplier-title {
   display: block;
   color: var(--ink);
+  font-size: 0.95rem;
   font-weight: 850;
+  line-height: 1.28;
 }
 
 .supplier-link {
@@ -806,7 +828,8 @@ tbody tr:hover {
   display: block;
   margin-top: 2px;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .trip-pill,
@@ -922,10 +945,18 @@ tbody tr:hover {
   align-items: stretch;
 }
 
+.supplier-workspace.detail-closed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .supplier-table-panel {
   min-width: 0;
   border-right: 1px solid var(--line);
   background: var(--surface);
+}
+
+.supplier-workspace.detail-closed .supplier-table-panel {
+  border-right: 0;
 }
 
 .supplier-table-panel table {
@@ -948,6 +979,10 @@ tbody tr:hover {
 }
 
 .supplier-detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--line);
 }
@@ -956,6 +991,13 @@ tbody tr:hover {
   margin: 0;
   font-size: 1.08rem;
   line-height: 1.3;
+}
+
+.supplier-detail-close {
+  flex: 0 0 auto;
+  width: 34px;
+  min-height: 34px;
+  color: var(--muted);
 }
 
 .supplier-calendar-button {
@@ -1133,7 +1175,7 @@ tbody tr:hover {
 .report-volume-total strong {
   display: block;
   margin-top: 2px;
-  font-size: 2rem;
+  font-size: 1.68rem;
   line-height: 1;
   animation: reportMetricIn 520ms ease both;
 }

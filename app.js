@@ -510,6 +510,7 @@ const dom = {
   supplierSummary: document.querySelector("#supplierSummary"),
   supplierActiveCount: document.querySelector("#supplierActiveCount"),
   supplierTopError: document.querySelector("#supplierTopError"),
+  supplierWorkspace: document.querySelector(".supplier-workspace"),
   supplierFilterInputs: document.querySelectorAll("[data-supplier-filter]"),
   supplierSortButtons: document.querySelectorAll("[data-supplier-sort]"),
   supplierRows: document.querySelector("#supplierRows"),
@@ -919,7 +920,7 @@ function primaryError(alert) {
 }
 
 function sortValue(alert, key) {
-  if (key === "inventory") return `${cityRoute(alert)} ${airportRoute(alert)} ${alert.inventoryId}`;
+  if (key === "inventory") return `${cityRoute(alert)} ${airportRoute(alert)} ${alert.airline} ${alert.flightNo}`;
   if (key === "advertised") return `${alert.dateIso} ${alert.advertisedTime}`;
   if (key === "license") return timeToMinutes(alert.licensedTime);
   if (key === "tripType") return alert.tripType;
@@ -1060,7 +1061,7 @@ function renderQueue() {
         <tr>
           <td>
             <span class="route-title">${cityRoute(alert)}</span>
-            <span class="meta-line">${airportRoute(alert)} | ${alert.airline} ${alert.flightNo} | ${alert.inventoryId}</span>
+            <span class="meta-line">${airportRoute(alert)} | ${alert.airline} ${alert.flightNo}</span>
           </td>
           <td>
             <span class="route-title">${alert.date}, ${alert.advertisedTime}</span>
@@ -1287,9 +1288,14 @@ function supplierDetailAlerts(supplier) {
 
 function renderSupplierDetail(supplier) {
   if (!supplier) {
+    dom.supplierWorkspace.classList.add("detail-closed");
+    dom.supplierDetailPanel.hidden = true;
     dom.supplierDetailPanel.innerHTML = '<p class="empty-row">Select a supplier to review active alerts.</p>';
     return;
   }
+
+  dom.supplierWorkspace.classList.remove("detail-closed");
+  dom.supplierDetailPanel.hidden = false;
 
   const detailAlerts = supplierDetailAlerts(supplier);
   const errorCounts = countValues(detailAlerts.map((alert) => primaryError(alert).code));
@@ -1325,6 +1331,9 @@ function renderSupplierDetail(supplier) {
       <div>
         <h4>${supplier.name}</h4>
       </div>
+      <button class="icon-button supplier-detail-close" type="button" data-close-supplier-detail aria-label="Close supplier details" title="Close supplier details">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5Z" /></svg>
+      </button>
     </div>
     <div class="supplier-detail-stats">
       <div><span>Active alerts</span><strong>${detailAlerts.length}</strong></div>
@@ -1367,13 +1376,12 @@ function renderSupplierDetail(supplier) {
 function renderSuppliers() {
   const rows = filteredSuppliers();
   const pageRows = paginatedSuppliers(rows);
-  const visibleSelected = rows.find((supplier) => supplier.name === state.suppliers.selectedSupplier);
-  if (!visibleSelected) state.suppliers.selectedSupplier = rows[0]?.name || "";
+  const selectedSupplier = rows.find((supplier) => supplier.name === state.suppliers.selectedSupplier);
+  if (!selectedSupplier) state.suppliers.selectedSupplier = "";
 
   renderSupplierSortHeaders();
   renderSupplierMetrics(rows);
   renderSupplierPagination(rows);
-  const selectedSupplier = rows.find((supplier) => supplier.name === state.suppliers.selectedSupplier);
 
   if (!pageRows.length) {
     dom.supplierRows.innerHTML = '<tr><td colspan="6" class="empty-row">No suppliers match the selected filters.</td></tr>';
@@ -1752,18 +1760,25 @@ function bindEvents() {
     renderSuppliers();
   });
 
+  dom.supplierDetailPanel.addEventListener("click", (event) => {
+    const closeButton = event.target.closest("[data-close-supplier-detail]");
+    if (!closeButton) return;
+    state.suppliers.selectedSupplier = "";
+    dom.supplierRows.querySelectorAll("[data-supplier]").forEach((row) => row.classList.remove("selected"));
+    renderSupplierDetail(null);
+  });
+
   document.querySelector("#refreshButton").addEventListener("click", () => {
     showToast("Inventory and license feeds refreshed.");
   });
 
   document.querySelector("#exportButton").addEventListener("click", () => {
     const csvRows = [
-      ["Alert ID", "Inventory ID", "Origin City", "Origin Airport", "Destination City", "Destination Airport", "City Route", "Airport Route", "Airline", "Flight No", "Date", "Advertised Time", "License Time", "Trip Type", "Flight Type", "Supplier", "Error Code", "Error Note"],
+      ["Alert ID", "Origin City", "Origin Airport", "Destination City", "Destination Airport", "City Route", "Airport Route", "Airline", "Flight No", "Date", "Advertised Time", "License Time", "Trip Type", "Flight Type", "Supplier", "Error Code", "Error Note"],
       ...filteredAlerts().map((alert) => {
         const error = primaryError(alert);
         return [
           alert.id,
-          alert.inventoryId,
           alert.originCity,
           alert.originAirport,
           alert.destinationCity,
